@@ -94,7 +94,6 @@
         }
 
         #difficulty-select {
-            margin-bottom: 10px;
             padding: 5px;
         }
     </style>
@@ -108,13 +107,14 @@
             <button id="startBlackAiBtn">Start Black vs AI</button>
             <button id="start2PlayerBtn">Start 2 Players</button>
         </div>
-        <div id="statusbar"></div>
+        <label for="difficulty-select">Select AI Difficulty:</label>
+        <select id="difficulty-select">
+            <option value="0">Random</option>
+            <option value="1" selected="selected">Easy</option>
+            <option value="2">Medium</option>
+        </select>
     </div>
-    <label for="difficulty-select">Select AI Difficulty:</label>
-    <select id="difficulty-select">
-        <option value="0">Random</option>
-        <option value="1" selected="selected">Easy</option>
-    </select>
+    <div id="statusbar"></div>
 
     <div id="board"></div>
 
@@ -221,7 +221,7 @@
             if (is_finish()) {
                 // anybody has queen?
                 status = is_finish() + ' wins';
-            } else if (game.game_over() || game.in_stalemate()) {
+            } else if (game.in_stalemate()) {
                 // game over?
                 status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
             } else {
@@ -274,7 +274,7 @@
         }
 
         function makeAiMove() {
-            if (is_finish() || game.game_over() || game.in_stalemate()) return;
+            if (is_finish() || game.in_stalemate()) return;
 
             var possibleMoves = game.moves();
 
@@ -287,7 +287,9 @@
                 bestMove = possibleMoves[randomIndex];
             } else if (aiDifficulty === 1) { // Easy
                 bestMove = findBestMove(game, 3, true);
-            }
+            } else if (aiDifficulty === 2) { // Medium
+                    bestMove = findBestMove(game, 4, true);
+                }
 
             game.move(bestMove);
             board.position(game.fen());
@@ -299,6 +301,11 @@
             let bestMove = null;
             let bestScore = maximizingPlayer ? -Infinity : Infinity;
             const possibleMoves = game.moves();
+
+            if (possibleMoves.length === 0) {
+                // No moves available, return null. evaluateBoard will handle the consequences
+                return null;
+            }
 
             for (let i = 0; i < possibleMoves.length; i++) {
                 const move = possibleMoves[i];
@@ -312,11 +319,16 @@
                 }
             }
 
+            //If there's no legal board, then return a first item on available move
+            if (!bestMove) {
+                bestMove = possibleMoves[0]
+            }
+
             return bestMove;
         }
 
         function minimax(game, depth, maximizingPlayer) {
-            if (depth === 0 || is_finish() || game.game_over() || game.in_stalemate()) {
+            if (depth === 0 || is_finish() || game.in_stalemate()) {
                 return evaluateBoard(game);
             }
 
@@ -350,6 +362,16 @@
             let score = 0;
             const board = game.board();
             const turn = game.turn(); // 'w' or 'b'
+            const possibleMoves = game.moves();
+
+            // If no moves are available, penalize it, unless its win
+            if (possibleMoves.length === 0 && !is_finish()) {
+                if (turn === 'b') {
+                    return -5000; // This is the ai. It will try to avoid this scenario
+                } else {
+                    return 5000
+                }
+            }
 
             //Winning condition check
             const isFinishedResult = is_finish();
@@ -378,6 +400,42 @@
                         let centerColumnBonus = 0;
                         if (col > 0 && col < 7) {
                             centerColumnBonus = 0.2
+                        }
+
+                        // Prioritize: Is the pawn on the next move free?
+                        let nextMoveFree = 0;
+                        if (piece.color === 'b') {
+                            // Check if the pawn can move forward one square
+                            if (row + 1 < 8 && !board[row + 1][col]) {
+                                let willBeFreeScore = 0;
+                                // Check if there are any white pawns that could capture after it moves
+                                if (col > 0 && row + 2 < 8 && board[row + 2][col - 1] && board[row + 2][col - 1].color === 'w') {
+
+                                } else if (col < 7 && row + 2 < 8 && board[row + 2][col + 1] && board[row + 2][col + 1].color === 'w') {
+
+                                } else {
+                                    willBeFreeScore = 1
+                                }
+
+                                nextMoveFree += willBeFreeScore
+                            }
+
+                        } else {
+                            // Check if the pawn can move forward one square
+                            if (row - 1 >= 0 && !board[row - 1][col]) {
+
+                                let willBeFreeScore = 0
+                                // Check if there are any black pawns that could capture after it moves
+                                if (col > 0 && row - 2 >= 0 && board[row - 2][col - 1] && board[row - 2][col - 1].color === 'b') {
+
+                                } else if (col < 7 && row - 2 >= 0 && board[row - 2][col + 1] && board[row - 2][col + 1].color === 'b') {
+
+
+                                } else {
+                                    willBeFreeScore = 1
+                                }
+                                nextMoveFree += willBeFreeScore
+                            }
                         }
 
                         // Free path bonus (no pieces in front)
@@ -429,7 +487,8 @@
                             (8 - promotionDistance) * 2 +   // Closer is better, weight heavily
                             freePathBonus +
                             adjacentThreatPenalty +
-                            centerColumnBonus
+                            centerColumnBonus +
+                            nextMoveFree * 2
 
                         if (piece.color === 'b') {
                             score += pieceScore;
