@@ -5,7 +5,9 @@
     <meta charset="utf-8">
     <link rel="icon" type="image/png" href="favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css" integrity="sha512-TU/clvRaSqKB43MX6dvJPEWV8tEGDTbmT4mdxTs6DSYsBY9zKmiw4Qeykp0nS10ndH14HRNG2VWN+IjiMfA17Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css"
+        integrity="sha512-TU/clvRaSqKB43MX6dvJPEWV8tEGDTbmT4mdxTs6DSYsBY9zKmiw4Qeykp0nS10ndH14HRNG2VWN+IjiMfA17Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: sans-serif;
@@ -13,82 +15,126 @@
         }
 
         #board {
-            width: 80vmin; /* Responsive size */
-            height: 80vmin; /* Responsive size */
+            width: 80vmin;
+            /* Responsive size */
+            height: 80vmin;
+            /* Responsive size */
             margin: 20px auto;
         }
 
-    #game-header {
-        display: flex;
-        justify-content: space-between; /* Distribute items evenly */
-        align-items: center; /* Vertically center items */
-        padding: 10px;
-        background-color: #f0f0f0;
-        margin-bottom: 20px;
-    }
-
-    #game-header h1 {
-        margin: 0; /* Remove default heading margin */
-        font-size: 1.5em;
-    }
-
-    #resetBtn {
-        padding: 8px 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 4px; /* Rounded corners */
-    }
-
-    #resetBtn:hover {
-        background-color: #3e8e41;
-    }
-
-    #statusbar {
-        font-size: 1em;
-        color: #555;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
         #game-header {
-            flex-direction: column; /* Stack items vertically on small screens */
-            align-items: stretch; /* Make items take full width */
+            display: flex;
+            justify-content: space-between;
+            /* Distribute items evenly */
+            align-items: center;
+            /* Vertically center items */
+            padding: 10px;
+            background-color: #f0f0f0;
+            margin-bottom: 20px;
         }
 
-        #game-header h1,
-        #resetBtn,
-        #statusbar {
-            margin-bottom: 5px; /* Add spacing between stacked items */
-            text-align: center; /* Center text */
+        #game-header h1 {
+            margin: 0;
+            /* Remove default heading margin */
+            font-size: 1.5em;
         }
-    }
+
+        #start-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        #start-buttons button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #start-buttons button:hover {
+            background-color: #3e8e41;
+        }
+
+        #statusbar {
+            font-size: 1em;
+            color: #555;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #game-header {
+                flex-direction: column;
+                /* Stack items vertically on small screens */
+                align-items: stretch;
+                /* Make items take full width */
+            }
+
+            #game-header h1,
+            #start-buttons,
+            #statusbar {
+                margin-bottom: 5px;
+                /* Add spacing between stacked items */
+                text-align: center;
+            }
+
+            #start-buttons {
+                flex-direction: column;
+            }
+        }
 
         @media (max-width: 600px) {
             #board {
-                width: 95vmin; /* Larger on smaller screens */
-                height: 95vmin; /* Larger on smaller screens */
+                width: 95vmin;
+                /* Larger on smaller screens */
+                height: 95vmin;
+                /* Larger on smaller screens */
             }
+        }
+
+        #difficulty-select {
+            margin-bottom: 10px;
+            padding: 5px;
         }
     </style>
 </head>
+
 <body>
     <div id="game-header">
         <h1>Pawn Wars</h1>
-        <button id="resetBtn">Reset Game</button>
-        <div id="status"></div>
+        <div id="start-buttons">
+            <button id="startWhiteAiBtn">Start White vs AI</button>
+            <button id="startBlackAiBtn">Start Black vs AI</button>
+            <button id="start2PlayerBtn">Start 2 Players</button>
+        </div>
+        <div id="statusbar"></div>
     </div>
+    <label for="difficulty-select">Select AI Difficulty:</label>
+    <select id="difficulty-select">
+        <option value="0">Random</option>
+        <option value="1" selected="selected">Easy</option>
+    </select>
+
     <div id="board"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js" integrity="sha512-WfASs5HtTgTL/eZsLaOftSN9wMQl7WZGlU5UiKx/yxTViMfGh9whWRwKAC27qH8VtZJqSMqDdbq2uUb1tY3jvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"
+        integrity="sha512-WfASs5HtTgTL/eZsLaOftSN9wMQl7WZGlU5UiKx/yxTViMfGh9whWRwKAC27qH8VtZJqSMqDdbq2uUb1tY3jvQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
+        integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
         var board = null;
         var game = new Chess();
-        var $status = $('#status');
+        var $status = $('#statusbar');
+        var aiDifficulty = 1; // Default AI difficulty
+        var gameMode = "2player"; // Default game mode
+        var aiColor = null; // "w" or "b" if playing vs AI
 
         function is_finish() {
             // custom end game
@@ -117,39 +163,49 @@
                 return false;
             }
 
-            // only pick up pieces for the side to move
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
+            // only pick up pieces for the side to move, respect AI
+            if (gameMode !== "2player") {
+                if ((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')) {
+                    return false;
+                }
+            } else {
+                if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                    return false;
+                }
             }
 
-            document.addEventListener('touchmove', preventPageScroll, { passive: false });
+            document.addEventListener('touchmove', preventPageScroll, {
+                passive: false
+            });
 
             return true;
         }
 
-        function onDrop(source, target) {
-            // see if the move is legal
-            var move = {
-                from: source,
-                to: target,
-                promotion: 'q' // NOTE: always promote to a queen for simplicity.  Shouldn't matter in pawn wars.
-            };
+    function onDrop(source, target) {
+        document.removeEventListener('touchmove', preventPageScroll);
+        // see if the move is legal
+        var move = {
+            from: source,
+            to: target,
+            promotion: 'q' // NOTE: always promote to a queen for simplicity. Shouldn't matter in pawn wars.
+        };
 
-            try {
-                var result = game.move(move);
-            } catch (e) {
-                // Remove the scroll prevention, otherwise you'll be stuck
-                document.removeEventListener('touchmove', preventPageScroll);
-                return 'snapback'; // illegal move
-            }
-
-
-            updateStatus();
-
-            // Remove the scroll prevention, otherwise you'll be stuck
+        try {
+            var result = game.move(move);
+        } catch (e) {
             document.removeEventListener('touchmove', preventPageScroll);
+            return 'snapback'; // illegal move
         }
+
+        updateStatus();
+        document.removeEventListener('touchmove', preventPageScroll);
+
+        if (gameMode !== "2player" && !is_finish() && result) { // Only call AI if a valid move was made
+            // AI's turn
+            window.setTimeout(makeAiMove, 250);
+        }
+    }
 
         function onSnapEnd() {
             board.position(game.fen());
@@ -167,7 +223,7 @@
                 status = is_finish() + ' wins';
             } else if (game.game_over() || game.in_stalemate()) {
                 // game over?
-               status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
+                status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
             } else {
                 // game still on
                 status = 'Current turn: ' + moveColor;
@@ -176,37 +232,219 @@
             $status.text(status);
         }
 
-
-        var config = {
-            draggable: true,
-            position: 'start',
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd,
-            pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
-        };
-
         function initializeGame() {
             game = new Chess();
             game.clear(); // Start with an empty board
+
             // Set up the pawn positions
             for (let i = 0; i < 8; i++) {
-                game.put({ type: 'p', color: 'w' }, String.fromCharCode(97 + i) + '2');  // White pawns on rank 2
-                game.put({ type: 'p', color: 'b' }, String.fromCharCode(97 + i) + '7');  // Black pawns on rank 7
+                game.put({
+                    type: 'p',
+                    color: 'w'
+                }, String.fromCharCode(97 + i) + '2'); // White pawns on rank 2
+                game.put({
+                    type: 'p',
+                    color: 'b'
+                }, String.fromCharCode(97 + i) + '7'); // Black pawns on rank 7
             }
-            config.position = game.fen()
+
+            var initialFen = '8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1';
+            if (gameMode !== "2player") {
+                if (aiColor === 'w') {
+                    initialFen = '8/PPPPPPPP/8/8/8/8/pppppppp/8 b - - 0 1'
+                }
+            }
+
+            var config = {
+                draggable: true,
+                position: initialFen,
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd,
+                pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
+            };
+
             board = Chessboard('board', config);
-            // board.position(game.fen()); // Display the initial board state
+            board.position(game.fen()); // Display the initial board state
+            updateStatus();
+
+            if (gameMode !== "2player" && game.turn() === aiColor) {
+                makeAiMove();
+            }
+        }
+
+        function makeAiMove() {
+            if (is_finish() || game.game_over() || game.in_stalemate()) return;
+
+            var possibleMoves = game.moves();
+
+            if (possibleMoves.length === 0) return;
+
+            let bestMove = null;
+
+            if (aiDifficulty === 0) { // Random
+                var randomIndex = Math.floor(Math.random() * possibleMoves.length);
+                bestMove = possibleMoves[randomIndex];
+            } else if (aiDifficulty === 1) { // Easy
+                bestMove = findBestMove(game, 3, true);
+            }
+
+            game.move(bestMove);
+            board.position(game.fen());
             updateStatus();
         }
 
-        $(document).ready(function () {
-            initializeGame();
 
-            $('#resetBtn').on('click', function () {
+        function findBestMove(game, depth, maximizingPlayer) {
+            let bestMove = null;
+            let bestScore = maximizingPlayer ? -Infinity : Infinity;
+            const possibleMoves = game.moves();
+
+            for (let i = 0; i < possibleMoves.length; i++) {
+                const move = possibleMoves[i];
+                game.move(move);
+                let score = minimax(game, depth - 1, !maximizingPlayer);
+                game.undo();
+
+                if ((maximizingPlayer && score > bestScore) || (!maximizingPlayer && score < bestScore)) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+
+            return bestMove;
+        }
+
+
+        function minimax(game, depth, maximizingPlayer) {
+            if (depth === 0 || is_finish() || game.game_over() || game.in_stalemate()) {
+                return evaluateBoard(game);
+            }
+
+            const possibleMoves = game.moves();
+
+            if (maximizingPlayer) {
+                let bestScore = -Infinity;
+                for (let i = 0; i < possibleMoves.length; i++) {
+                    const move = possibleMoves[i];
+                    game.move(move);
+                    let score = minimax(game, depth - 1, false);
+                    game.undo();
+                    bestScore = Math.max(score, bestScore);
+                }
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < possibleMoves.length; i++) {
+                    const move = possibleMoves[i];
+                    game.move(move);
+                    let score = minimax(game, depth - 1, true);
+                    game.undo();
+                    bestScore = Math.min(score, bestScore);
+                }
+                return bestScore;
+            }
+        }
+
+
+        function evaluateBoard(game) {
+            let score = 0;
+
+            const board = game.board();
+            const turn = game.turn(); // 'w' or 'b'
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const piece = board[row][col];
+                    if (piece && piece.type === 'p') {
+                        // Favor pawns that are difficult to capture
+                        let pawnSafetyScore = 0;
+
+                        // Check if the pawn is supported by other pawns
+                        if (piece.color === 'w') {
+                            if (col > 0 && row > 0 && board[row - 1][col - 1] && board[row - 1][col - 1].color === 'w' && board[row - 1][col - 1].type === 'p') {
+                                pawnSafetyScore += 0.5; // Supported from the left
+                            }
+                            if (col < 7 && row > 0 && board[row - 1][col + 1] && board[row - 1][col + 1].color === 'w' && board[row - 1][col + 1].type === 'p') {
+                                pawnSafetyScore += 0.5; // Supported from the right
+                            }
+                            if (game.turn() === 'w') {
+                                score -= (7 - row); // Encourage white pawns to move up (lower row number). Also if AI, it should not move far from each other
+                            }
+                        } else {
+                            if (col > 0 && row < 7 && board[row + 1][col - 1] && board[row + 1][col - 1].color === 'b' && board[row + 1][col - 1].type === 'p') {
+                                pawnSafetyScore += 0.5; // Supported from the left
+                            }
+                            if (col < 7 && row < 7 && board[row + 1][col + 1] && board[row + 1][col + 1].color === 'b' && board[row + 1][col + 1].type === 'p') {
+                                pawnSafetyScore += 0.5; // Supported from the right
+                            }
+                            if (game.turn() === 'b') {
+                                score += row; // Encourage black pawns to move down (higher row number). Also if AI, it should not move far from each other
+                            }
+                        }
+                        score += pawnSafetyScore; // Bonus for safety
+
+
+                        // Encourage open lines for advancement - Penalize the cases when there's something infront of the pawn
+                        let openLineScore = 0;
+                        if (piece.color === 'w') {
+                            if (row > 0 && !board[row - 1][col]) {
+                                openLineScore += 0.5;
+                            }
+                            if (row > 0 && board[row - 1][col]) {
+                                openLineScore -= 0.5;
+                            }
+                        } else {
+                            if (row < 7 && !board[row + 1][col]) {
+                                openLineScore += 0.5;
+                            }
+                            if (row < 7 && board[row + 1][col]) {
+                                openLineScore -= 0.5;
+                            }
+                        }
+                        score += openLineScore;
+
+                    }
+                }
+            }
+
+            const isFinishedResult = is_finish();
+            if (isFinishedResult === 'White') {
+                score = -1000;
+            }
+            if (isFinishedResult === 'Black') {
+                score = 1000;
+            }
+            return score;
+        }
+
+
+        $(document).ready(function () {
+            $("#startWhiteAiBtn").on("click", function () {
+                gameMode = "AI";
+                aiColor = 'b'; // Player plays white
                 initializeGame();
             });
+
+            $("#startBlackAiBtn").on("click", function () {
+                gameMode = "AI";
+                aiColor = 'w'; // Player plays black
+                initializeGame();
+            });
+
+            $("#start2PlayerBtn").on("click", function () {
+                gameMode = "2player";
+                aiColor = null;
+                initializeGame();
+            });
+
+            $('#difficulty-select').on('change', function () {
+                aiDifficulty = parseInt($(this).val());
+            });
+
+            // initializeGame();
         });
     </script>
 </body>
+
 </html>
