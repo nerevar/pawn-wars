@@ -315,7 +315,6 @@
             return bestMove;
         }
 
-
         function minimax(game, depth, maximizingPlayer) {
             if (depth === 0 || is_finish() || game.game_over() || game.in_stalemate()) {
                 return evaluateBoard(game);
@@ -349,72 +348,98 @@
 
         function evaluateBoard(game) {
             let score = 0;
-
             const board = game.board();
             const turn = game.turn(); // 'w' or 'b'
 
-            for (let row = 0; row < 8; row++) {
-                for (let col = 0; col < 8; col++) {
+            //Winning condition check
+            const isFinishedResult = is_finish();
+            if (isFinishedResult === 'White') {
+                return -10000; // Very bad for maximizing player (AI)
+            }
+            if (isFinishedResult === 'Black') {
+                return 10000; // Very good for maximizing player (AI)
+            }
+
+            for (let col = 0; col < 8; col++) {
+                for (let row = 0; row < 8; row++) {
                     const piece = board[row][col];
                     if (piece && piece.type === 'p') {
-                        // Favor pawns that are difficult to capture
-                        let pawnSafetyScore = 0;
+                        // Goal: Maximize pawn promotion chances
 
-                        // Check if the pawn is supported by other pawns
-                        if (piece.color === 'w') {
-                            if (col > 0 && row > 0 && board[row - 1][col - 1] && board[row - 1][col - 1].color === 'w' && board[row - 1][col - 1].type === 'p') {
-                                pawnSafetyScore += 0.5; // Supported from the left
-                            }
-                            if (col < 7 && row > 0 && board[row - 1][col + 1] && board[row - 1][col + 1].color === 'w' && board[row - 1][col + 1].type === 'p') {
-                                pawnSafetyScore += 0.5; // Supported from the right
-                            }
-                            if (game.turn() === 'w') {
-                                score -= (7 - row); // Encourage white pawns to move up (lower row number). Also if AI, it should not move far from each other
-                            }
+                        // Calculate distance to promotion
+                        let promotionDistance;
+                        if (piece.color === 'b') {
+                            promotionDistance = 7 - row;
                         } else {
-                            if (col > 0 && row < 7 && board[row + 1][col - 1] && board[row + 1][col - 1].color === 'b' && board[row + 1][col - 1].type === 'p') {
-                                pawnSafetyScore += 0.5; // Supported from the left
+                            promotionDistance = row;
+                        }
+
+                        // Center column bonus
+                        let centerColumnBonus = 0;
+                        if (col > 0 && col < 7) {
+                            centerColumnBonus = 0.2
+                        }
+
+                        // Free path bonus (no pieces in front)
+                        let freePathBonus = 0;
+                        if (piece.color === 'b') {
+                            let isPathBlocked = false;
+                            for (let r = row + 1; r < 8; r++) {
+                                if (board[r][col]) {
+                                    isPathBlocked = true;
+                                    break;
+                                }
                             }
-                            if (col < 7 && row < 7 && board[row + 1][col + 1] && board[row + 1][col + 1].color === 'b' && board[row + 1][col + 1].type === 'p') {
-                                pawnSafetyScore += 0.5; // Supported from the right
+                            if (!isPathBlocked) {
+                                freePathBonus += 0.7;
                             }
-                            if (game.turn() === 'b') {
-                                score += row; // Encourage black pawns to move down (higher row number). Also if AI, it should not move far from each other
+                        } else { // White
+                            let isPathBlocked = false;
+                            for (let r = row - 1; r >= 0; r--) {
+                                if (board[r][col]) {
+                                    isPathBlocked = true;
+                                    break;
+                                }
+                            }
+                            if (!isPathBlocked) {
+                                freePathBonus += 0.7;
                             }
                         }
-                        score += pawnSafetyScore; // Bonus for safety
 
-
-                        // Encourage open lines for advancement - Penalize the cases when there's something infront of the pawn
-                        let openLineScore = 0;
-                        if (piece.color === 'w') {
-                            if (row > 0 && !board[row - 1][col]) {
-                                openLineScore += 0.5;
+                        // Adjacent columns blocked penalty (Discourage being captured)
+                        let adjacentThreatPenalty = 0;
+                        if (piece.color === 'b') {
+                            if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'w') {
+                                adjacentThreatPenalty -= 0.8;
                             }
-                            if (row > 0 && board[row - 1][col]) {
-                                openLineScore -= 0.5;
+                            if (col < 7 && board[row][col + 1] && board[row][col + 1].color === 'w') {
+                                adjacentThreatPenalty -= 0.8;
                             }
                         } else {
-                            if (row < 7 && !board[row + 1][col]) {
-                                openLineScore += 0.5;
+                            if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'b') {
+                                adjacentThreatPenalty -= 0.8;
                             }
-                            if (row < 7 && board[row + 1][col]) {
-                                openLineScore -= 0.5;
+                            if (col < 7 && board[row][col + 1] && board[row][col + 1].color === 'b') {
+                                adjacentThreatPenalty -= 0.8;
                             }
                         }
-                        score += openLineScore;
 
+                        // Combine factors, weighting promotion distance higher
+                        let pieceScore =
+                            (8 - promotionDistance) * 2 +   // Closer is better, weight heavily
+                            freePathBonus +
+                            adjacentThreatPenalty +
+                            centerColumnBonus
+
+                        if (piece.color === 'b') {
+                            score += pieceScore;
+                        } else {
+                            score -= pieceScore;
+                        }
                     }
                 }
             }
 
-            const isFinishedResult = is_finish();
-            if (isFinishedResult === 'White') {
-                score = -1000;
-            }
-            if (isFinishedResult === 'Black') {
-                score = 1000;
-            }
             return score;
         }
 
