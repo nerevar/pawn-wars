@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pawn Wars</title>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css" integrity="sha512-TU/clvRaSqKB43MX6dvJPEWV8tEGDTbmT4mdxTs6DSYsBY9zKmiw4Qeykp0nS10ndH14HRNG2VWN+IjiMfA17Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+        }
+
+        #board {
+            width: 80vmin; /* Responsive size */
+            height: 80vmin; /* Responsive size */
+            margin: 20px auto;
+        }
+
+    #game-header {
+        display: flex;
+        justify-content: space-between; /* Distribute items evenly */
+        align-items: center; /* Vertically center items */
+        padding: 10px;
+        background-color: #f0f0f0;
+        margin-bottom: 20px;
+    }
+
+    #game-header h1 {
+        margin: 0; /* Remove default heading margin */
+        font-size: 1.5em;
+    }
+
+    #resetBtn {
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px; /* Rounded corners */
+    }
+
+    #resetBtn:hover {
+        background-color: #3e8e41;
+    }
+
+    #statusbar {
+        font-size: 1em;
+        color: #555;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+        #game-header {
+            flex-direction: column; /* Stack items vertically on small screens */
+            align-items: stretch; /* Make items take full width */
+        }
+
+        #game-header h1,
+        #resetBtn,
+        #statusbar {
+            margin-bottom: 5px; /* Add spacing between stacked items */
+            text-align: center; /* Center text */
+        }
+    }
+
+        @media (max-width: 600px) {
+            #board {
+                width: 95vmin; /* Larger on smaller screens */
+                height: 95vmin; /* Larger on smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-header">
+        <h1>Pawn Wars</h1>
+        <button id="resetBtn">Reset Game</button>
+        <div id="status"></div>
+    </div>
+    <div id="board"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js" integrity="sha512-WfASs5HtTgTL/eZsLaOftSN9wMQl7WZGlU5UiKx/yxTViMfGh9whWRwKAC27qH8VtZJqSMqDdbq2uUb1tY3jvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        var board = null;
+        var game = new Chess();
+        var $status = $('#status');
+
+        function is_finish() {
+            // custom end game
+            const board = game.board();
+            if (!board) {
+                return null
+            }
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const piece = board[row][col];
+                    if (piece && piece.type === 'q') {
+                        return piece.color === 'w' ? 'White' : 'Black';
+                    }
+                }
+            }
+            return null;
+        }
+
+        function onDragStart(source, piece, position, orientation) {
+            // do not pick up pieces if the game is over
+            if (is_finish()) {
+                return false;
+            }
+
+            // only pick up pieces for the side to move
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+            return true;
+        }
+
+        function onDrop(source, target) {
+            // see if the move is legal
+            var move = {
+                from: source,
+                to: target,
+                promotion: 'q' // NOTE: always promote to a queen for simplicity.  Shouldn't matter in pawn wars.
+            };
+
+            try {
+                var result = game.move(move);
+            } catch (e) {
+                return 'snapback'; // illegal move
+            }
+
+
+            updateStatus();
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        function updateStatus() {
+            var status = '';
+            var moveColor = 'White';
+            if (game.turn() === 'b') {
+                moveColor = 'Black';
+            }
+
+            if (is_finish()) {
+                // anybody has queen?
+                status = is_finish() + ' wins';
+            } else if (game.game_over() || game.in_stalemate()) {
+                // game over?
+               status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
+            } else {
+                // game still on
+                status = 'Current turn: ' + moveColor;
+            }
+
+            $status.text(status);
+        }
+
+
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
+        };
+
+        function initializeGame() {
+            game = new Chess();
+            game.clear(); // Start with an empty board
+            // Set up the pawn positions
+            for (let i = 0; i < 8; i++) {
+                game.put({ type: 'p', color: 'w' }, String.fromCharCode(97 + i) + '2');  // White pawns on rank 2
+                game.put({ type: 'p', color: 'b' }, String.fromCharCode(97 + i) + '7');  // Black pawns on rank 7
+            }
+            config.position = game.fen()
+            board = Chessboard('board', config);
+            // board.position(game.fen()); // Display the initial board state
+            updateStatus();
+        }
+
+        $(document).ready(function () {
+            initializeGame();
+
+            $('#resetBtn').on('click', function () {
+                initializeGame();
+            });
+        });
+    </script>
+</body>
+</html>
