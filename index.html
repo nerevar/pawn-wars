@@ -107,6 +107,10 @@
             return null;
         }
 
+        function preventPageScroll(event) {
+            event.preventDefault();
+        }
+
         function onDragStart(source, piece, position, orientation) {
             // do not pick up pieces if the game is over
             if (is_finish()) {
@@ -118,6 +122,9 @@
                 (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
                 return false;
             }
+
+            document.addEventListener('touchmove', preventPageScroll, { passive: false });
+
             return true;
         }
 
@@ -132,11 +139,16 @@
             try {
                 var result = game.move(move);
             } catch (e) {
+                // Remove the scroll prevention, otherwise you'll be stuck
+                document.removeEventListener('touchmove', preventPageScroll);
                 return 'snapback'; // illegal move
             }
 
 
             updateStatus();
+
+            // Remove the scroll prevention, otherwise you'll be stuck
+            document.removeEventListener('touchmove', preventPageScroll);
         }
 
         function onSnapEnd() {
