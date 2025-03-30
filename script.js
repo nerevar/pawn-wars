@@ -258,7 +258,7 @@ $(document).ready(function () {
 
     // Get IP Info
     $.ajax({
-        url: 'http://ipinfo.io',
+        url: 'https://ipinfo.io',
         dataType: 'jsonp',
         success: function (data) {
             ipInfo = data;
