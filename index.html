@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Pawn Wars</title>
     <meta charset="utf-8">
@@ -53,6 +54,15 @@
             border-radius: 4px;
         }
 
+        #undoBtn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
         #start-buttons button:hover {
             background-color: #3e8e41;
         }
@@ -68,7 +78,7 @@
                 flex-direction: column;
                 /* Stack items vertically on small screens */
                 align-items: stretch;
-                /* Make items take full width */
+                /* Take full width */
             }
 
             #game-header h1,
@@ -96,6 +106,14 @@
         #difficulty-select {
             padding: 5px;
         }
+
+        #pgn {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #777;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
     </style>
 </head>
 
@@ -107,6 +125,7 @@
             <button id="startBlackAiBtn">Start Black vs AI</button>
             <button id="start2PlayerBtn">Start 2 Players</button>
         </div>
+        <button id="undoBtn">Undo</button>
         <label for="difficulty-select">Select AI Difficulty:</label>
         <select id="difficulty-select">
             <option value="0">Random</option>
@@ -118,6 +137,8 @@
 
     <div id="board"></div>
 
+    <div id="pgn"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
         integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -128,407 +149,8 @@
         integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <script>
-        var board = null;
-        var game = new Chess();
-        var $status = $('#statusbar');
-        var aiDifficulty = 1; // Default AI difficulty
-        var gameMode = "2player"; // Default game mode
-        var aiColor = null; // "w" or "b" if playing vs AI
-
-        function is_finish() {
-            // custom end game
-            const board = game.board();
-            if (!board) {
-                return null
-            }
-            for (let row = 0; row < 8; row++) {
-                for (let col = 0; col < 8; col++) {
-                    const piece = board[row][col];
-                    if (piece && piece.type === 'q') {
-                        return piece.color === 'w' ? 'White' : 'Black';
-                    }
-                }
-            }
-            return null;
-        }
-
-        function preventPageScroll(event) {
-            event.preventDefault();
-        }
-
-        function onDragStart(source, piece, position, orientation) {
-            // do not pick up pieces if the game is over
-            if (is_finish()) {
-                return false;
-            }
-
-            // only pick up pieces for the side to move, respect AI
-            if (gameMode !== "2player") {
-                if ((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')) {
-                    return false;
-                }
-            } else {
-                if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                    return false;
-                }
-            }
-
-            document.addEventListener('touchmove', preventPageScroll, {
-                passive: false
-            });
-
-            return true;
-        }
-
-    function onDrop(source, target) {
-        document.removeEventListener('touchmove', preventPageScroll);
-        // see if the move is legal
-        var move = {
-            from: source,
-            to: target,
-            promotion: 'q' // NOTE: always promote to a queen for simplicity. Shouldn't matter in pawn wars.
-        };
-
-        try {
-            var result = game.move(move);
-        } catch (e) {
-            document.removeEventListener('touchmove', preventPageScroll);
-            return 'snapback'; // illegal move
-        }
-
-        updateStatus();
-        document.removeEventListener('touchmove', preventPageScroll);
-
-        if (gameMode !== "2player" && !is_finish() && result) { // Only call AI if a valid move was made
-            // AI's turn
-            window.setTimeout(makeAiMove, 250);
-        }
-    }
-
-        function onSnapEnd() {
-            board.position(game.fen());
-        }
-
-        function updateStatus() {
-            var status = '';
-            var moveColor = 'White';
-            if (game.turn() === 'b') {
-                moveColor = 'Black';
-            }
-
-            if (is_finish()) {
-                // anybody has queen?
-                status = is_finish() + ' wins';
-            } else if (game.in_stalemate()) {
-                // game over?
-                status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
-            } else {
-                // game still on
-                status = 'Current turn: ' + moveColor;
-            }
-
-            $status.text(status);
-        }
-
-        function initializeGame() {
-            game = new Chess();
-            game.clear(); // Start with an empty board
-
-            // Set up the pawn positions
-            for (let i = 0; i < 8; i++) {
-                game.put({
-                    type: 'p',
-                    color: 'w'
-                }, String.fromCharCode(97 + i) + '2'); // White pawns on rank 2
-                game.put({
-                    type: 'p',
-                    color: 'b'
-                }, String.fromCharCode(97 + i) + '7'); // Black pawns on rank 7
-            }
-
-            var initialFen = '8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1';
-            if (gameMode !== "2player") {
-                if (aiColor === 'w') {
-                    initialFen = '8/PPPPPPPP/8/8/8/8/pppppppp/8 b - - 0 1'
-                }
-            }
-
-            var config = {
-                draggable: true,
-                position: initialFen,
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                onSnapEnd: onSnapEnd,
-                pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
-            };
-
-            board = Chessboard('board', config);
-            board.position(game.fen()); // Display the initial board state
-            updateStatus();
-
-            if (gameMode !== "2player" && game.turn() === aiColor) {
-                makeAiMove();
-            }
-        }
-
-        function makeAiMove() {
-            if (is_finish() || game.in_stalemate()) return;
-
-            var possibleMoves = game.moves();
-
-            if (possibleMoves.length === 0) return;
-
-            let bestMove = null;
-
-            if (aiDifficulty === 0) { // Random
-                var randomIndex = Math.floor(Math.random() * possibleMoves.length);
-                bestMove = possibleMoves[randomIndex];
-            } else if (aiDifficulty === 1) { // Easy
-                bestMove = findBestMove(game, 3, true);
-            } else if (aiDifficulty === 2) { // Medium
-                    bestMove = findBestMove(game, 4, true);
-                }
-
-            game.move(bestMove);
-            board.position(game.fen());
-            updateStatus();
-        }
-
-
-        function findBestMove(game, depth, maximizingPlayer) {
-            let bestMove = null;
-            let bestScore = maximizingPlayer ? -Infinity : Infinity;
-            const possibleMoves = game.moves();
-
-            if (possibleMoves.length === 0) {
-                // No moves available, return null. evaluateBoard will handle the consequences
-                return null;
-            }
-
-            for (let i = 0; i < possibleMoves.length; i++) {
-                const move = possibleMoves[i];
-                game.move(move);
-                let score = minimax(game, depth - 1, !maximizingPlayer);
-                game.undo();
-
-                if ((maximizingPlayer && score > bestScore) || (!maximizingPlayer && score < bestScore)) {
-                    bestScore = score;
-                    bestMove = move;
-                }
-            }
-
-            //If there's no legal board, then return a first item on available move
-            if (!bestMove) {
-                bestMove = possibleMoves[0]
-            }
-
-            return bestMove;
-        }
-
-        function minimax(game, depth, maximizingPlayer) {
-            if (depth === 0 || is_finish() || game.in_stalemate()) {
-                return evaluateBoard(game);
-            }
-
-            const possibleMoves = game.moves();
-
-            if (maximizingPlayer) {
-                let bestScore = -Infinity;
-                for (let i = 0; i < possibleMoves.length; i++) {
-                    const move = possibleMoves[i];
-                    game.move(move);
-                    let score = minimax(game, depth - 1, false);
-                    game.undo();
-                    bestScore = Math.max(score, bestScore);
-                }
-                return bestScore;
-            } else {
-                let bestScore = Infinity;
-                for (let i = 0; i < possibleMoves.length; i++) {
-                    const move = possibleMoves[i];
-                    game.move(move);
-                    let score = minimax(game, depth - 1, true);
-                    game.undo();
-                    bestScore = Math.min(score, bestScore);
-                }
-                return bestScore;
-            }
-        }
-
-
-        function evaluateBoard(game) {
-            let score = 0;
-            const board = game.board();
-            const turn = game.turn(); // 'w' or 'b'
-            const possibleMoves = game.moves();
-
-            // If no moves are available, penalize it, unless its win
-            if (possibleMoves.length === 0 && !is_finish()) {
-                if (turn === 'b') {
-                    return -5000; // This is the ai. It will try to avoid this scenario
-                } else {
-                    return 5000
-                }
-            }
-
-            //Winning condition check
-            const isFinishedResult = is_finish();
-            if (isFinishedResult === 'White') {
-                return -10000; // Very bad for maximizing player (AI)
-            }
-            if (isFinishedResult === 'Black') {
-                return 10000; // Very good for maximizing player (AI)
-            }
-
-            for (let col = 0; col < 8; col++) {
-                for (let row = 0; row < 8; row++) {
-                    const piece = board[row][col];
-                    if (piece && piece.type === 'p') {
-                        // Goal: Maximize pawn promotion chances
-
-                        // Calculate distance to promotion
-                        let promotionDistance;
-                        if (piece.color === 'b') {
-                            promotionDistance = 7 - row;
-                        } else {
-                            promotionDistance = row;
-                        }
-
-                        // Center column bonus
-                        let centerColumnBonus = 0;
-                        if (col > 0 && col < 7) {
-                            centerColumnBonus = 0.2
-                        }
-
-                        // Prioritize: Is the pawn on the next move free?
-                        let nextMoveFree = 0;
-                        if (piece.color === 'b') {
-                            // Check if the pawn can move forward one square
-                            if (row + 1 < 8 && !board[row + 1][col]) {
-                                let willBeFreeScore = 0;
-                                // Check if there are any white pawns that could capture after it moves
-                                if (col > 0 && row + 2 < 8 && board[row + 2][col - 1] && board[row + 2][col - 1].color === 'w') {
-
-                                } else if (col < 7 && row + 2 < 8 && board[row + 2][col + 1] && board[row + 2][col + 1].color === 'w') {
-
-                                } else {
-                                    willBeFreeScore = 1
-                                }
-
-                                nextMoveFree += willBeFreeScore
-                            }
-
-                        } else {
-                            // Check if the pawn can move forward one square
-                            if (row - 1 >= 0 && !board[row - 1][col]) {
-
-                                let willBeFreeScore = 0
-                                // Check if there are any black pawns that could capture after it moves
-                                if (col > 0 && row - 2 >= 0 && board[row - 2][col - 1] && board[row - 2][col - 1].color === 'b') {
-
-                                } else if (col < 7 && row - 2 >= 0 && board[row - 2][col + 1] && board[row - 2][col + 1].color === 'b') {
-
-
-                                } else {
-                                    willBeFreeScore = 1
-                                }
-                                nextMoveFree += willBeFreeScore
-                            }
-                        }
-
-                        // Free path bonus (no pieces in front)
-                        let freePathBonus = 0;
-                        if (piece.color === 'b') {
-                            let isPathBlocked = false;
-                            for (let r = row + 1; r < 8; r++) {
-                                if (board[r][col]) {
-                                    isPathBlocked = true;
-                                    break;
-                                }
-                            }
-                            if (!isPathBlocked) {
-                                freePathBonus += 0.7;
-                            }
-                        } else { // White
-                            let isPathBlocked = false;
-                            for (let r = row - 1; r >= 0; r--) {
-                                if (board[r][col]) {
-                                    isPathBlocked = true;
-                                    break;
-                                }
-                            }
-                            if (!isPathBlocked) {
-                                freePathBonus += 0.7;
-                            }
-                        }
-
-                        // Adjacent columns blocked penalty (Discourage being captured)
-                        let adjacentThreatPenalty = 0;
-                        if (piece.color === 'b') {
-                            if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'w') {
-                                adjacentThreatPenalty -= 0.8;
-                            }
-                            if (col < 7 && board[row][col + 1] && board[row][col + 1].color === 'w') {
-                                adjacentThreatPenalty -= 0.8;
-                            }
-                        } else {
-                            if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'b') {
-                                adjacentThreatPenalty -= 0.8;
-                            }
-                            if (col < 7 && board[row][col + 1] && board[row][col + 1].color === 'b') {
-                                adjacentThreatPenalty -= 0.8;
-                            }
-                        }
-
-                        // Combine factors, weighting promotion distance higher
-                        let pieceScore =
-                            (8 - promotionDistance) * 2 +   // Closer is better, weight heavily
-                            freePathBonus +
-                            adjacentThreatPenalty +
-                            centerColumnBonus +
-                            nextMoveFree * 2
-
-                        if (piece.color === 'b') {
-                            score += pieceScore;
-                        } else {
-                            score -= pieceScore;
-                        }
-                    }
-                }
-            }
-
-            return score;
-        }
-
-
-        $(document).ready(function () {
-            $("#startWhiteAiBtn").on("click", function () {
-                gameMode = "AI";
-                aiColor = 'b'; // Player plays white
-                initializeGame();
-            });
-
-            $("#startBlackAiBtn").on("click", function () {
-                gameMode = "AI";
-                aiColor = 'w'; // Player plays black
-                initializeGame();
-            });
-
-            $("#start2PlayerBtn").on("click", function () {
-                gameMode = "2player";
-                aiColor = null;
-                initializeGame();
-            });
-
-            $('#difficulty-select').on('change', function () {
-                aiDifficulty = parseInt($(this).val());
-            });
-
-            // initializeGame();
-        });
-    </script>
+    <script src="ai.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
