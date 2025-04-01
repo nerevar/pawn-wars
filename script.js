@@ -10,6 +10,7 @@ var ipInfo = {};
 
 const spreadSheetId = 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6ajEwZzBtdkdJS3pMckFWZ3VQVkx2Mzl1QWhMTXNLRlV5MEh3ZlRkZHdrUEFOV0FaTlpyRlFIX2FVZTVtUzRaaU8vZXhlYw';
 const ipInfoToken = 'MTc0NTY3OWE3NTI4YmU';
+var pageLoadTime = Date.now();
 
 // Function to send data to Google Sheets
 function sendDataToGoogleSheets(data) {
@@ -35,6 +36,7 @@ function saveStats() {
                     ? 'b'
                     : 'w',
         pgn: extractMovesFromPGN(game.pgn()),
+        timespent: Date.now() - pageLoadTime,
 
         city: ipInfo.city,
         region: ipInfo.region,
@@ -149,7 +151,7 @@ function onSnapEnd() {
 }
 
 
-function updateStatus() {
+function updateStatus(isInitial) {
     var status = '';
     var moveColor = 'White';
     if (game.turn() === 'b') {
@@ -159,11 +161,15 @@ function updateStatus() {
     if (is_finish()) {
         // anybody has queen?
         status = is_finish() + ' wins';
-        saveStats()
+        if (isInitial !== true) {
+            saveStats()
+        }
     } else if (game.in_stalemate()) {
         // game over?
         status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
-        saveStats()
+        if (isInitial !== true) {
+            saveStats()
+        }
     } else {
         // game still on
         status = 'Current turn: ' + moveColor;
@@ -217,7 +223,7 @@ function initializeGame(moves) {
 
     board = Chessboard('board', config);
     board.position(game.fen()); // Display the initial board state
-    updateStatus();
+    updateStatus(true);
 
     if (gameMode !== "2player" && game.turn() === aiColor) {
         makeAiMove();
@@ -256,6 +262,7 @@ $('#undoBtn').on('click', function () {
 
 
 $(document).ready(function () {
+    pageLoadTime = Date.now();
 
     // Get IP Info
     $.ajax({
