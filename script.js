@@ -218,7 +218,8 @@ function initializeGame(moves) {
         onDragStart: onDragStart,
         onDrop: onDrop,
         onSnapEnd: onSnapEnd,
-        pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
+        pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
+        orientation: gameMode == 'playerw' ? 'white' : 'black'
     };
 
     board = Chessboard('board', config);
