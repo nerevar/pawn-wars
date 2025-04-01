@@ -9,6 +9,7 @@ var aiColor = 'b'; // Default AI Color
 var ipInfo = {};
 
 const spreadSheetId = 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6ajEwZzBtdkdJS3pMckFWZ3VQVkx2Mzl1QWhMTXNLRlV5MEh3ZlRkZHdrUEFOV0FaTlpyRlFIX2FVZTVtUzRaaU8vZXhlYw';
+const ipInfoToken = 'MTc0NTY3OWE3NTI4YmU';
 
 // Function to send data to Google Sheets
 function sendDataToGoogleSheets(data) {
@@ -258,7 +259,7 @@ $(document).ready(function () {
 
     // Get IP Info
     $.ajax({
-        url: 'https://ipinfo.io',
+        url: 'https://ipinfo.io?token=' + atob(ipInfoToken),  // free account, 50k requests per month
         dataType: 'jsonp',
         success: function (data) {
             ipInfo = data;
