@@ -114,6 +114,31 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
+
+        .square-hint {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+
+            color: black;
+            background-color: #f0f0f0b3;
+            border-radius: 20px;
+            border: 1px solid black;
+        }
+
+        .move-top-1 {
+            background-color: rgb(0 237 0);
+            z-index: 5;
+        }
+        .move-top-2 {
+            background-color: rgb(0 180 0);
+            z-index: 4;
+        }
+        .move-top-3 {
+            background-color: rgb(0 100 0);
+            z-index: 3;
+        }
     </style>
 </head>
 
@@ -126,6 +151,7 @@
             <button id="start2PlayerBtn">Start 2 Players</button>
         </div>
         <button id="undoBtn">Undo</button>
+        <button id="movesBtn">Show Scores</button>
         <label for="difficulty-select">Select AI Difficulty:</label>
         <select id="difficulty-select">
             <option value="0">Random</option>
@@ -145,9 +171,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"
         integrity="sha512-WfASs5HtTgTL/eZsLaOftSN9wMQl7WZGlU5UiKx/yxTViMfGh9whWRwKAC27qH8VtZJqSMqDdbq2uUb1tY3jvQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
         integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js"
+        integrity="sha512-oprzqYFJfo4Bx/nNEcSI0xo7ggJrLc+qQ6hrS3zV/Jn0C4dsg4gu+FXW/Vm0jP9CrV7e5e6dcLUYkg3imjfjbw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+
+    <script>var exports = {};</script>
+    <script src="https://unpkg.com/chess.js@1.1.0/dist/cjs/chess.js"></script>
 
     <script src="ai.js"></script>
     <script src="script.js"></script>
