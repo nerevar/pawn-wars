@@ -114,6 +114,31 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
+
+        .square-hint {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+
+            color: black;
+            background-color: #f0f0f0b3;
+            border-radius: 20px;
+            border: 1px solid black;
+        }
+
+        .move-top-1 {
+            background-color: rgb(0 237 0);
+            z-index: 5;
+        }
+        .move-top-2 {
+            background-color: rgb(0 180 0);
+            z-index: 4;
+        }
+        .move-top-3 {
+            background-color: rgb(0 100 0);
+            z-index: 3;
+        }
     </style>
 </head>
 
@@ -126,6 +151,7 @@
             <button id="start2PlayerBtn">Start 2 Players</button>
         </div>
         <button id="undoBtn">Undo</button>
+        <button id="movesBtn">Show Scores</button>
         <label for="difficulty-select">Select AI Difficulty:</label>
         <select id="difficulty-select">
             <option value="0">Random</option>

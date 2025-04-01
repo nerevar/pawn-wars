@@ -261,6 +261,33 @@ $('#undoBtn').on('click', function () {
     updateURL();
 });
 
+$('#movesBtn').on('click', function () {
+    if ($('.square-hint').length) {
+        console.log('remove hints');
+        $('.square-hint').remove();
+    } else {
+        const possibleMoves = game.moves({ verbose: true });
+        const depth = aiDifficulty == 2 ? 4 : 3;
+        let moves_list = [];
+        console.log('add hints for', possibleMoves);
+
+        for (const move of possibleMoves) {
+            if (game.move(move) !== null) {
+                const score = minimax(game, depth, false).toFixed(1);
+                game.undo();
+                console.info(`evaluate move ${move.to}: ${score}`)
+                moves_list.push({ move: move, score: score });
+            }
+        }
+        moves_list.sort((a, b) => b.score - a.score);
+
+        moves_list.forEach((moveData, index) => {
+            const $square = $('#board .square-' + moveData.move.to);
+            $square.append(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score}</div>`);
+        });
+    }
+});
+
 
 $(document).ready(function () {
     pageLoadTime = Date.now();

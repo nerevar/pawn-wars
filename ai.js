@@ -17,6 +17,7 @@ function makeAiMove() {
         bestMove = findBestMove(game, 4, true);
     }
 
+    console.log('makeAiMove', bestMove)
     game.move(bestMove);
     board.position(game.fen());
     updateStatus();
