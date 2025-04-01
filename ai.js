@@ -1,6 +1,6 @@
 // ai.js
 function makeAiMove() {
-    if (is_finish() || game.in_stalemate()) return;
+    if (is_finish() || game.isStalemate()) return;
 
     var possibleMoves = game.moves();
 
@@ -37,7 +37,11 @@ function findBestMove(game, depth, maximizingPlayer) {
 
     for (let i = 0; i < possibleMoves.length; i++) {
         const move = possibleMoves[i];
-        game.move(move);
+        let result = game.move(move);
+        if (!result) {
+            console.error('cannot make move:', move);
+            continue
+        }
         let score = minimax(game, depth - 1, !maximizingPlayer);
         game.undo();
 
@@ -56,7 +60,7 @@ function findBestMove(game, depth, maximizingPlayer) {
 }
 
 function minimax(game, depth, maximizingPlayer) {
-    if (depth === 0 || is_finish() || game.in_stalemate()) {
+    if (depth === 0 || is_finish() || game.isStalemate()) {
         return evaluateBoard(game);
     }
 
@@ -66,7 +70,11 @@ function minimax(game, depth, maximizingPlayer) {
         let bestScore = -Infinity;
         for (let i = 0; i < possibleMoves.length; i++) {
             const move = possibleMoves[i];
-            game.move(move);
+            let result = game.move(move);
+            if (!result) {
+                console.error('cannot make move:', move);
+                continue
+            }
             let score = minimax(game, depth - 1, false);
             game.undo();
             bestScore = Math.max(score, bestScore);
@@ -76,7 +84,11 @@ function minimax(game, depth, maximizingPlayer) {
         let bestScore = Infinity;
         for (let i = 0; i < possibleMoves.length; i++) {
             const move = possibleMoves[i];
-            game.move(move);
+            let result = game.move(move);
+            if (!result) {
+                console.error('cannot make move:', move);
+                continue
+            }
             let score = minimax(game, depth - 1, true);
             game.undo();
             bestScore = Math.min(score, bestScore);

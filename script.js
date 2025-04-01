@@ -164,7 +164,7 @@ function updateStatus(isInitial) {
         if (isInitial !== true) {
             saveStats()
         }
-    } else if (game.in_stalemate()) {
+    } else if (game.isStalemate()) {
         // game over?
         status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
         if (isInitial !== true) {
