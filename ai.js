@@ -97,7 +97,7 @@ function minimax(game, depth, maximizingPlayer) {
     }
 }
 
-function evaluateBoard(game) {
+function evaluateBoard_old(game) {
     let score = 0;
     const board = game.board();
     const turn = game.turn(); // 'w' or 'b'
@@ -241,49 +241,48 @@ function evaluateBoard(game) {
     return score;
 }
 
-// function evaluateBoard2(game) {
-//     let promotionDistanceWeight = 2;
-//     let freePathWeight = 0.7;
-//     let adjacentThreatWeight = -0.8;
-//     let centerColumnWeight = 0.2;
-//     let nextMoveFreeWeight = 2;
-//     let noMovesPenaltyWeight = 5000;
+function evaluateBoard(game) {
+    let promotionDistanceWeight = 2;
+    let freePathWeight = 0.7;
+    let adjacentThreatWeight = -0.8;
+    let centerColumnWeight = 0.2;
+    let nextMoveFreeWeight = 2;
+    let noMovesPenaltyWeight = 5000;
 
 
-//     let score = 0;
-//     const board = game.board();
-//     const turn = game.turn(); // 'w' or 'b'
-//     const possibleMoves = game.moves();
+    let score = 0;
+    const board = game.board();
+    const turn = game.turn(); // 'w' or 'b'
+    const possibleMoves = game.moves();
 
-//     // If no moves are available, penalize it, unless its win
-//     score += getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game)
+    // If no moves are available, penalize it, unless its win
+    score += getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game)
 
-//     //Winning condition check
-//     const isFinishedResult = is_finish();
-//     score += getIsFinishedWeight(isFinishedResult)
+    //Winning condition check
+    const isFinishedResult = is_finish();
+    score += getIsFinishedWeight(isFinishedResult)
 
+    for (let col = 0; col < 8; col++) {
+        for (let row = 0; row < 8; row++) {
+            const piece = board[row][col];
+            if (piece && piece.type === 'p') {
+                piece.row = row;
+                piece.col = col;
 
+                // Goal: Maximize pawn promotion chances
+                let pieceScore = getPieceFactors(piece, board, promotionDistanceWeight, freePathWeight, adjacentThreatWeight, centerColumnWeight, nextMoveFreeWeight);
 
-//     for (let col = 0; col < 8; col++) {
-//         for (let row = 0; row < 8; row++) {
-//             const piece = board[row][col];
-//             if (piece && piece.type === 'p') {
-//                 // Goal: Maximize pawn promotion chances
+                if (piece.color === 'b') {
+                    score += pieceScore;
+                } else {
+                    score -= pieceScore;
+                }
+            }
+        }
+    }
 
-//                 let pieceScore = getPieceFactors(piece, board, promotionDistanceWeight, freePathWeight, adjacentThreatWeight, centerColumnWeight, nextMoveFreeWeight);
-
-
-//                 if (piece.color === 'b') {
-//                     score += pieceScore;
-//                 } else {
-//                     score -= pieceScore;
-//                 }
-//             }
-//         }
-//     }
-
-//     return score;
-// }
+    return score;
+}
 
 
 
@@ -300,17 +299,15 @@ function getPieceFactors(piece, board, promotionDistanceWeight, freePathWeight, 
     // Free path bonus (no pieces in front)
     let freePathBonus = getFreePathBonus(piece, board)
 
-
     // Adjacent columns blocked penalty (Discourage being captured)
     let adjacentThreatPenalty = getAdjacentThreatPenalty(piece, board)
 
-
     // Combine factors, weighting promotion distance higher
     return (8 - promotionDistance) * promotionDistanceWeight +   // Closer is better, weight heavily
-        freePathWeight +
-        adjacentThreatWeight +
-        centerColumnBonus +
-        nextMoveFreeWeight * 2
+        freePathWeight * freePathBonus +
+        adjacentThreatWeight * adjacentThreatPenalty +
+        centerColumnWeight * centerColumnBonus +
+        nextMoveFreeWeight * nextMoveFree
 }
 
 function calculatePromotionDistance(piece) {
