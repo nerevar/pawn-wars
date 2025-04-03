@@ -1,40 +1,90 @@
 // ai.js
-function makeAiMove() {
-    if (is_finish() || game.isStalemate()) return;
+function makeAiMove(aiDifficulty) {
+    if (isFinished() || game.isStalemate()) return;
 
-    var possibleMoves = game.moves();
+    if (!aiDifficulty) aiDifficulty = 2;
 
+    var possibleMoves = getMoves();
     if (possibleMoves.length === 0) return;
 
-    let bestMove = null;
-
-    if (aiDifficulty === 0) { // Random
-        var randomIndex = Math.floor(Math.random() * possibleMoves.length);
-        bestMove = possibleMoves[randomIndex];
-    } else if (aiDifficulty === 1) { // Easy
-        bestMove = findBestMove(game, 3, true);
-    } else if (aiDifficulty === 2) { // Medium
-        bestMove = findBestMove(game, 4, true);
+    const bestMove = findBestMove(game, aiDifficulty)
+    console.log('makeAiMove', bestMove, 'aiDifficulty', aiDifficulty)
+    if (!bestMove) {
+        // No moves available, return null. evaluateBoard will handle the consequences
     }
 
-    console.log('makeAiMove', bestMove)
     game.move(bestMove);
-    board.position(game.fen());
-    updateStatus();
-    updateURL();
+    if (typeof window !== 'undefined') {
+        board.position(game.fen());
+        updateStatus();
+        updateURL();
+    }
+}
+
+function run_game(cnt, ai1, ai2) {
+    let stats = []
+    for (var i = 0; i < cnt; ++i) {
+        initializeGame()
+        while (!isFinished()) {
+            let currentAiLevel = game.turn() == 'w' ? ai1 : ai2;
+            var possibleMoves = getMoves();
+            if (possibleMoves.length === 0) break;
+            const bestMove = findBestMove(game, currentAiLevel);
+            if (!bestMove) break;
+            // console.log('game.turn()', game.turn(), 'makeAiMove', bestMove, 'aiDifficulty', currentAiLevel)
+            game.move(bestMove);
+        }
+        // console.log('finished:', isFinished(), 'turn', game.turn())
+        stats.push(isFinished())
+    }
+    // console.log('DONE', cnt, 'games, stats: ', stats)
+    return stats;
+}
+
+function getBestRandomMove(movesScores, mode = 'max') {
+    if (movesScores.length === 0) {
+        return null; // Если массив пуст, возвращаем null
+    }
+
+    const epsilon = 0.001;
+    let bestScore = movesScores[0].score;
+    let bestMoves = [movesScores[0].move];
+
+    for (let i = 1; i < movesScores.length; i++) {
+        const currentScore = movesScores[i].score;
+        const diff = Math.abs(currentScore - bestScore);
+
+        if (diff < epsilon) {
+            // Если score примерно равен текущему лучшему, добавляем в список
+            bestMoves.push(movesScores[i].move);
+        } else if (
+            (mode === 'max' && currentScore > bestScore) ||
+            (mode === 'min' && currentScore < bestScore)
+        ) {
+            // Если нашли новый лучший score (max/min), обновляем список
+            bestScore = currentScore;
+            bestMoves = [movesScores[i].move];
+        }
+    }
+
+    // Возвращаем случайный ход из отфильтрованных
+    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
 }
 
 
-function findBestMove(game, depth, maximizingPlayer) {
-    let bestMove = null;
-    let bestScore = maximizingPlayer ? -Infinity : Infinity;
-    const possibleMoves = game.moves();
+function findBestMove(game, aiDifficulty) {
+    const possibleMoves = getMoves();
+    let depth = aiDifficulty == 2 ? 4 : 1;
+    if (aiDifficulty == 3) {
+        depth = 4;
+    }
 
     if (possibleMoves.length === 0) {
         // No moves available, return null. evaluateBoard will handle the consequences
         return null;
     }
 
+    let movesScores = [];
     for (let i = 0; i < possibleMoves.length; i++) {
         const move = possibleMoves[i];
         let result = game.move(move);
@@ -42,32 +92,32 @@ function findBestMove(game, depth, maximizingPlayer) {
             console.error('cannot make move:', move);
             continue
         }
-        let score = minimax(game, depth - 1, !maximizingPlayer);
-        game.undo();
 
-        if ((maximizingPlayer && score > bestScore) || (!maximizingPlayer && score < bestScore)) {
-            bestScore = score;
-            bestMove = move;
+        let score = 0;
+        if (aiDifficulty !== 0) {
+            score = minimax(game, depth - 1, false, aiDifficulty);
         }
+
+        movesScores.push({ move: move, score: score });
+
+        game.undo();
     }
 
-    //If there's no legal board, then return a first item on available move
-    if (!bestMove) {
-        bestMove = possibleMoves[0]
-    }
-
-    return bestMove;
+    return getBestRandomMove(movesScores)
 }
 
-function minimax(game, depth, maximizingPlayer) {
-    if (depth === 0 || is_finish() || game.isStalemate()) {
-        return evaluateBoard(game);
+function minimax(game, depth, maximizingPlayer, aiDifficulty) {
+    if (depth === 0 || isFinished() || game.isStalemate()) {
+        if (aiDifficulty == 3) {
+            return evaluateBoard2(game, aiDifficulty);
+        }
+        return evaluateBoard(game, aiDifficulty);
     }
 
-    const possibleMoves = game.moves();
+    const possibleMoves = getMoves();
+    let movesScores = [];
 
     if (maximizingPlayer) {
-        let bestScore = -Infinity;
         for (let i = 0; i < possibleMoves.length; i++) {
             const move = possibleMoves[i];
             let result = game.move(move);
@@ -75,13 +125,12 @@ function minimax(game, depth, maximizingPlayer) {
                 console.error('cannot make move:', move);
                 continue
             }
-            let score = minimax(game, depth - 1, false);
+            let score = minimax(game, depth - 1, false, aiDifficulty);
+            movesScores.push({ move: move, score: score });
             game.undo();
-            bestScore = Math.max(score, bestScore);
         }
-        return bestScore;
+        return getBestRandomMove(movesScores);
     } else {
-        let bestScore = Infinity;
         for (let i = 0; i < possibleMoves.length; i++) {
             const move = possibleMoves[i];
             let result = game.move(move);
@@ -89,22 +138,22 @@ function minimax(game, depth, maximizingPlayer) {
                 console.error('cannot make move:', move);
                 continue
             }
-            let score = minimax(game, depth - 1, true);
+            let score = minimax(game, depth - 1, true, aiDifficulty);
+            movesScores.push({ move: move, score: score });
             game.undo();
-            bestScore = Math.min(score, bestScore);
         }
-        return bestScore;
+        return getBestRandomMove(movesScores, mode='min');
     }
 }
 
-function evaluateBoard_old(game) {
+function evaluateBoard(game, aiDifficulty) {
     let score = 0;
     const board = game.board();
     const turn = game.turn(); // 'w' or 'b'
-    const possibleMoves = game.moves();
+    const possibleMoves = getMoves();
 
     // If no moves are available, penalize it, unless its win
-    if (possibleMoves.length === 0 && !is_finish()) {
+    if (possibleMoves.length === 0 && !isFinished()) {
         if (turn === 'b') {
             return -5000; // This is the ai. It will try to avoid this scenario
         } else {
@@ -113,12 +162,9 @@ function evaluateBoard_old(game) {
     }
 
     //Winning condition check
-    const isFinishedResult = is_finish();
-    if (isFinishedResult === 'White') {
-        return -10000; // Very bad for maximizing player (AI)
-    }
-    if (isFinishedResult === 'Black') {
-        return 10000; // Very good for maximizing player (AI)
+    const isFinishedResult = getIsFinishedWeight(isFinished())
+    if (isFinishedResult != 0) {
+        return isFinishedResult;
     }
 
     for (let col = 0; col < 8; col++) {
@@ -241,7 +287,7 @@ function evaluateBoard_old(game) {
     return score;
 }
 
-function evaluateBoard(game) {
+function evaluateBoard2(game, aiDifficulty) {
     let promotionDistanceWeight = 2;
     let freePathWeight = 0.7;
     let adjacentThreatWeight = -0.8;
@@ -253,13 +299,13 @@ function evaluateBoard(game) {
     let score = 0;
     const board = game.board();
     const turn = game.turn(); // 'w' or 'b'
-    const possibleMoves = game.moves();
+    const possibleMoves = getMoves();
 
     // If no moves are available, penalize it, unless its win
     score += getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game)
 
     //Winning condition check
-    const isFinishedResult = is_finish();
+    const isFinishedResult = isFinished();
     score += getIsFinishedWeight(isFinishedResult)
 
     for (let col = 0; col < 8; col++) {
@@ -283,7 +329,6 @@ function evaluateBoard(game) {
 
     return score;
 }
-
 
 
 function getPieceFactors(piece, board, promotionDistanceWeight, freePathWeight, adjacentThreatWeight, centerColumnWeight, nextMoveFreeWeight) {
@@ -417,10 +462,14 @@ function getAdjacentThreatPenalty(piece, board) {
 }
 
 function getIsFinishedWeight(isFinishedResult) {
-    if (isFinishedResult === 'White') {
+    if (!isFinishedResult) {
+        return 0;
+    }
+
+    if (isFinishedResult.includes('w')) {
         return -10000; // Very bad for maximizing player (AI)
     }
-    if (isFinishedResult === 'Black') {
+    if (isFinishedResult.includes('b')) {
         return 10000; // Very good for maximizing player (AI)
     }
 
@@ -428,7 +477,7 @@ function getIsFinishedWeight(isFinishedResult) {
 }
 
 function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {
-    if (possibleMoves.length === 0 && !is_finish()) {
+    if (possibleMoves.length === 0 && !isFinished()) {
         if (turn === 'b') {
             return -noMovesPenaltyWeight; // This is the ai. It will try to avoid this scenario
         } else {
@@ -437,4 +486,9 @@ function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {
     }
 
     return 0
+}
+
+module.exports = function () {
+    this.makeAiMove = makeAiMove
+    this.run_game = run_game
 }

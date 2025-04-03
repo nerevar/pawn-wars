@@ -28,13 +28,7 @@ function saveStats() {
         usertime: dt.toTimeString().split(' ')[0],
         playerw: aiColor === 'w' ? aiDifficulty : "player",
         playerb: aiColor === 'b' ? aiDifficulty : "player",
-        result: is_finish() === "White"
-            ? "wQ"
-            : is_finish() === "Black"
-                ? "bQ"
-                : game.turn() == 'w'
-                    ? 'b'
-                    : 'w',
+        result: isFinished(),
         pgn: extractMovesFromPGN(game.pgn()),
         timespent: Date.now() - pageLoadTime,
 
@@ -74,30 +68,13 @@ navigator.sayswho = (function () {
 })();
 
 
-function is_finish() {
-    // custom end game
-    const board = game.board();
-    if (!board) {
-        return null
-    }
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-            const piece = board[row][col];
-            if (piece && piece.type === 'q') {
-                return piece.color === 'w' ? 'White' : 'Black';
-            }
-        }
-    }
-    return null;
-}
-
 function preventPageScroll(event) {
     event.preventDefault();
 }
 
 function onDragStart(source, piece, position, orientation) {
     // do not pick up pieces if the game is over
-    if (is_finish()) {
+    if (isFinished()) {
         return false;
     }
 
@@ -140,9 +117,9 @@ function onDrop(source, target) {
     updateURL();
     document.removeEventListener('touchmove', preventPageScroll);
 
-    if (gameMode !== "2player" && !is_finish() && result) { // Only call AI if a valid move was made
+    if (gameMode !== "2player" && !isFinished() && result) { // Only call AI if a valid move was made
         // AI's turn
-        window.setTimeout(makeAiMove, 250);
+        window.setTimeout(function () { makeAiMove(aiDifficulty) }, 250);
     }
 }
 
@@ -153,68 +130,27 @@ function onSnapEnd() {
 
 function updateStatus(isInitial) {
     var status = '';
-    var moveColor = 'White';
-    if (game.turn() === 'b') {
-        moveColor = 'Black';
-    }
 
-    if (is_finish()) {
+    if (isFinished()) {
         // anybody has queen?
-        status = is_finish() + ' wins';
-        if (isInitial !== true) {
-            saveStats()
-        }
-    } else if (game.isStalemate()) {
-        // game over?
-        status = 'Current turn: ' + moveColor + ' But Game Over, no legal moves available.';
+        status = (isFinished().includes('w') ? 'White' : 'Black') + ' wins';
         if (isInitial !== true) {
             saveStats()
         }
     } else {
         // game still on
-        status = 'Current turn: ' + moveColor;
+        status = 'Current turn: ' + game.turn() === 'w' ? 'White' : 'Black';
     }
 
     $status.text(status);
     $pgn.text(extractMovesFromPGN(game.pgn()));
 }
 
-function initializeGame(moves) {
-    game = new Chess();
 
-    game.clear(); // Start with an empty board
-
-    // Set up the pawn positions
-    for (let i = 0; i < 8; i++) {
-        game.put({
-            type: 'p',
-            color: 'w'
-        }, String.fromCharCode(97 + i) + '2'); // White pawns on rank 2
-        game.put({
-            type: 'p',
-            color: 'b'
-        }, String.fromCharCode(97 + i) + '7'); // Black pawns on rank 7
-    }
-
-    let initialFen = '8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1';
-    if (gameMode !== "2player") {
-        if (aiColor === 'w') {
-            initialFen = '8/PPPPPPPP/8/8/8/8/pppppppp/8 b - - 0 1'
-        }
-    }
-
-    if (moves) {
-        moves.split(' ').forEach(function (item, index) {
-            if (item.includes('.')) return;
-            game.move(item);
-        });
-        // game.load_pgn(moves);
-        initialFen = game.fen();
-    }
-
+function initializeUI(fen) {
     var config = {
         draggable: true,
-        position: initialFen,
+        position: fen,
         onDragStart: onDragStart,
         onDrop: onDrop,
         onSnapEnd: onSnapEnd,
@@ -227,7 +163,7 @@ function initializeGame(moves) {
     updateStatus(true);
 
     if (gameMode !== "2player" && game.turn() === aiColor) {
-        makeAiMove();
+        window.setTimeout(function () { makeAiMove(aiDifficulty) }, 250);
     }
 }
 
@@ -251,7 +187,8 @@ function loadGameFromURL() {
     $('#difficulty-select').val(aiDifficulty); // Set difficulty select
     aiColor = (gameMode === 'playerw') ? 'b' : ((gameMode === 'playerb') ? 'w' : null);
 
-    initializeGame(moves);
+    fen = initializeGame(moves);
+    initializeUI(fen)
 }
 
 $('#undoBtn').on('click', function () {
@@ -266,7 +203,7 @@ $('#movesBtn').on('click', function () {
         console.log('remove hints');
         $('.square-hint').remove();
     } else {
-        const possibleMoves = game.moves({ verbose: true });
+        const possibleMoves = getMoves({ verbose: true });
         const depth = aiDifficulty == 2 ? 4 : 3;
         let moves_list = [];
         console.log('add hints for', possibleMoves);
@@ -308,21 +245,24 @@ $(document).ready(function () {
     $("#startWhiteAiBtn").on("click", function () {
         gameMode = "playerw";
         aiColor = 'b'; // Player plays white
-        initializeGame();
+        fen = initializeGame();
+        initializeUI(fen)
         updateURL();
     });
 
     $("#startBlackAiBtn").on("click", function () {
         gameMode = "playerb";
         aiColor = 'w'; // Player plays black
-        initializeGame();
+        fen = initializeGame();
+        initializeUI(fen)
         updateURL();
     });
 
     $("#start2PlayerBtn").on("click", function () {
         gameMode = "2player";
         aiColor = null;
-        initializeGame();
+        fen = initializeGame();
+        initializeUI(fen)
         updateURL();
     });
 
