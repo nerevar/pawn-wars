@@ -88,6 +88,9 @@ http://127.0.0.1:8080/?gameMode=playerb&aiDifficulty=2&moves=1.+b3+d5+2.+a3+e5+3
     * почему чёрный ходит на c5?
 
 
+!!! бонус за блокировку противника Infinity - это победа
+
+
 взятия:
 * шило на мыло не меняем https://disk.yandex.ru/i/TeMRsJXPjmbXkA
 
