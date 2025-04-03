@@ -1,13 +1,25 @@
-function getMoves(options) {
-    const moveOptions = options || {};
-    return game.moves(moveOptions).filter(move => {
-        // Если есть '=', то проверяем, что заканчивается на '=Q'
-        if (move.includes('=')) {
-            return move.endsWith('=Q');
-        }
-        // Если нет '=', то оставляем ход
-        return true;
-    });
+function getMoves() {
+    const turn = game.turn();
+
+    return game.moves()
+        // Фильтр превращений - оставляем только превращение в Ферзя
+        .filter(move => !move.includes('=') || move.endsWith('=Q'))
+        .sort((a, b) => {
+            // Приоритеты: 0=превращение, 1=взятие, 2=обычный ход
+            const aType = a.endsWith('=Q') ? 0 : a.includes('x') ? 1 : 2;
+            const bType = b.endsWith('=Q') ? 0 : b.includes('x') ? 1 : 2;
+
+            if (aType !== bType) return aType - bType;
+
+            // Для обычных ходов считаем расстояние до финиша
+            if (aType === 2) {
+                const aRow = parseInt(a.slice(-1));
+                const bRow = parseInt(b.slice(-1));
+                return turn === 'w' ? bRow - aRow : aRow - bRow
+            }
+
+            return 0;
+        });
 }
 
 function getResultLabel() {
@@ -76,9 +88,9 @@ function initializeGame(moves) {
     return initialFen;
 }
 
-module.exports = function () {
-    this.isFinished = isFinished
-    this.getResultLabel = getResultLabel
-    this.getMoves = getMoves
-    this.initializeGame = initializeGame
+module.exports = {
+    'isFinished': isFinished,
+    'getResultLabel': getResultLabel,
+    'getMoves': getMoves,
+    'initializeGame': initializeGame,
 }
