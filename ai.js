@@ -77,10 +77,10 @@ function getBestRandomMove(movesScores, mode = 'max') {
 
 
 function findBestMove(game, aiDifficulty) {
-    let depth = 6;
-    if (aiDifficulty >= 2 && aiDifficulty <= 6) {
-        depth = aiDifficulty;
-    }
+    let depth = 3;
+    // if (aiDifficulty >= 2 && aiDifficulty <= 6) {
+    //     depth = aiDifficulty;
+    // }
     const { move } = minimax(game, depth, game.turn() == 'w', aiDifficulty, -Infinity, +Infinity, true);
     return move;
 }
@@ -134,11 +134,40 @@ function minimax(
     return getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
 }
 
-function evaluateBoard3(game, aiDifficulty) {
+function getPawns(color = null) {
+    const board = game.board();
+    const pawns = [];
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece && piece.type === 'p' && (!color || piece.color === color)) {
+                piece.row = row;
+                piece.col = col;
+                pawns.push(piece);
+            }
+        }
+    }
+    return pawns;
+}
+
+function evaluatePawnAdvancement(color) {
+    // бонус за расстояние до финиша: +70 за пешку на 7 ряду для белых, +60 на 6м ряду и т.п.
     let score = 0;
+    const promotionRow = color === 'w' ? 7 : 0;
+    getPawns(color).forEach(pawn => {
+        const distance = Math.abs(pawn.row - promotionRow);
+        score += (7 - distance) * 10; // +70 за пешку на 7 ряду для белых
+    });
+    return score;
+}
+
+function evaluateBoard3(game, aiDifficulty) {
     if (aiDifficulty == 1) {
         return 0;
     }
+
+    let whiteScore = 0;
+    let blackScore = 0;
 
     if (aiDifficulty >= 2) {
         // Winning condition check
@@ -148,7 +177,12 @@ function evaluateBoard3(game, aiDifficulty) {
         }
     }
 
-    return score;
+    if (aiDifficulty >= 3) {
+        whiteScore += evaluatePawnAdvancement('w')
+        blackScore += evaluatePawnAdvancement('b')
+    }
+
+    return whiteScore - blackScore;
 }
 
 function evaluateBoard(game, aiDifficulty) {

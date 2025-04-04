@@ -55,7 +55,7 @@ function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
         winRate: (p * 100).toFixed(1) + '%',
         difference: ((p - 0.5) * 100).toFixed(1) + '%',
         confidenceInterval: ci.map(v => (v * 100).toFixed(1) + '%'),
-        pValue: pVal.toFixed(4),
+        pValue: pVal.toExponential(3),
         significant: pVal < (1 - confidenceLevel)
     };
 }
@@ -80,8 +80,8 @@ function zScore(p) {
 
 
 const N = 1000;
-const ai1 = 4;
-const ai2 = 3;
+const ai1 = 3;
+const ai2 = 1;
 
 console.log(`start ${N} games`)
 
