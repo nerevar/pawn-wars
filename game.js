@@ -1,3 +1,12 @@
+function sleep(ms) {
+    var waitTill = new Date(new Date().getTime() + ms);
+    while (waitTill > new Date()) { }
+}
+
+function drawGame() {
+    return game.ascii().replaceAll('p', 'B').replaceAll('P', 'W')
+}
+
 function getMoves() {
     const turn = game.turn();
 
@@ -93,4 +102,6 @@ module.exports = {
     'getResultLabel': getResultLabel,
     'getMoves': getMoves,
     'initializeGame': initializeGame,
+    'drawGame': drawGame,
+    'sleep': sleep,
 }
