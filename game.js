@@ -4,41 +4,38 @@ function sleep(ms) {
 }
 
 function drawGame() {
-    return game.ascii().replaceAll('p', 'B').replaceAll('P', 'W')
+    return game.ascii().replaceAll('p', '♟').replaceAll('P', '♗').replaceAll('q', '♛').replaceAll('Q', '♕')
+    // return game.ascii().replaceAll('p', 'B').replaceAll('P', 'W')
 }
 
-function getMoves() {
+function getMoves(options) {
+    options = options || {};
     const turn = game.turn();
 
-    return game.moves()
+    return game.moves(options)
         // Фильтр превращений - оставляем только превращение в Ферзя
-        .filter(move => !move.includes('=') || move.endsWith('=Q'))
+        .filter(move => {
+            const moveStr = typeof move === 'string' ? move : move?.san;
+            return !moveStr.includes('=') || moveStr.endsWith('=Q')
+        })
         .sort((a, b) => {
+            const aStr = typeof a === 'string' ? a : a?.san;
+            const bStr = typeof b === 'string' ? b : b?.san;
             // Приоритеты: 0=превращение, 1=взятие, 2=обычный ход
-            const aType = a.endsWith('=Q') ? 0 : a.includes('x') ? 1 : 2;
-            const bType = b.endsWith('=Q') ? 0 : b.includes('x') ? 1 : 2;
+            const aType = aStr.endsWith('=Q') ? 0 : aStr.includes('x') ? 1 : 2;
+            const bType = bStr.endsWith('=Q') ? 0 : bStr.includes('x') ? 1 : 2;
 
             if (aType !== bType) return aType - bType;
 
             // Для обычных ходов считаем расстояние до финиша
             if (aType === 2) {
-                const aRow = parseInt(a.slice(-1));
-                const bRow = parseInt(b.slice(-1));
+                const aRow = parseInt(aStr.slice(-1));
+                const bRow = parseInt(bStr.slice(-1));
                 return turn === 'w' ? bRow - aRow : aRow - bRow
             }
 
             return 0;
         });
-}
-
-function getResultLabel() {
-    return isFinished() === "White"
-        ? "wQ"
-        : isFinished() === "Black"
-            ? "bQ"
-            : game.turn() == 'w'
-                ? 'b'
-                : 'w';
 }
 
 function isFinished() {
@@ -97,11 +94,16 @@ function initializeGame(moves) {
     return initialFen;
 }
 
+// Function to extract PGN moves
+function extractMovesFromPGN(pgn) {
+    return pgn.split('\n').pop()
+}
+
 module.exports = {
     'isFinished': isFinished,
-    'getResultLabel': getResultLabel,
     'getMoves': getMoves,
     'initializeGame': initializeGame,
     'drawGame': drawGame,
     'sleep': sleep,
+    'extractMovesFromPGN': extractMovesFromPGN,
 }

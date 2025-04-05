@@ -5,6 +5,7 @@ var $pgn = $('#pgn');
 var aiDifficulty = 1; // Default AI difficulty
 var gameMode = "playerw"; // Default game mode
 var aiColor = 'b'; // Default AI Color
+var globalMoves = [];
 
 var ipInfo = {};
 
@@ -43,11 +44,6 @@ function saveStats() {
         useragent: navigator.userAgent
     };
     sendDataToGoogleSheets(data)
-}
-
-// Function to extract PGN moves
-function extractMovesFromPGN(pgn) {
-    return pgn.split('\n').pop()
 }
 
 navigator.sayswho = (function () {
@@ -203,16 +199,17 @@ $('#movesBtn').on('click', function () {
         console.log('remove hints');
         $('.square-hint').remove();
     } else {
+        globalMoves = [];
         const possibleMoves = getMoves({ verbose: true });
-        const depth = aiDifficulty == 2 ? 4 : 3;
+        const depth = 3;
         let moves_list = [];
         console.log('add hints for', possibleMoves);
 
         for (const move of possibleMoves) {
             if (game.move(move) !== null) {
-                const score = minimax(game, depth, false).toFixed(1);
+                const { score } = minimax(game, depth, game.turn() == 'w', aiDifficulty, -Infinity, +Infinity, [move.san]);
                 game.undo();
-                console.info(`evaluate move ${move.to}: ${score}`)
+                console.info(`evaluate move ${move.san}: ${score}`)
                 moves_list.push({ move: move, score: score });
             }
         }

@@ -1,6 +1,6 @@
 // ai.js
 function makeAiMove(aiDifficulty) {
-    if (isFinished() || game.isStalemate()) return;
+    if (isFinished()) return;
 
     if (!aiDifficulty) aiDifficulty = 2;
 
@@ -53,6 +53,7 @@ function getBestRandomMove(movesScores, mode = 'max') {
     const epsilon = 0.001;
     let bestScore = movesScores[0].score;
     let bestMoves = [movesScores[0].move];
+    let bestPath = [movesScores[0].path];
 
     for (let i = 1; i < movesScores.length; i++) {
         const currentScore = movesScores[i].score;
@@ -61,6 +62,7 @@ function getBestRandomMove(movesScores, mode = 'max') {
         if (diff < epsilon) {
             // Если score примерно равен текущему лучшему, добавляем в список
             bestMoves.push(movesScores[i].move);
+            bestPath.push(movesScores[i].path);
         } else if (
             (mode === 'max' && currentScore > bestScore) ||
             (mode === 'min' && currentScore < bestScore)
@@ -68,11 +70,13 @@ function getBestRandomMove(movesScores, mode = 'max') {
             // Если нашли новый лучший score (max/min), обновляем список
             bestScore = currentScore;
             bestMoves = [movesScores[i].move];
+            bestPath = [movesScores[i].path];
         }
     }
 
     // Возвращаем случайный ход из отфильтрованных
-    return { move: bestMoves[Math.floor(Math.random() * bestMoves.length)], score: bestScore };
+    const randomIndex = Math.floor(Math.random() * bestMoves.length);
+    return { move: bestMoves[randomIndex], score: bestScore, path: bestPath[randomIndex] };
 }
 
 
@@ -81,7 +85,8 @@ function findBestMove(game, aiDifficulty) {
     // if (aiDifficulty >= 2 && aiDifficulty <= 6) {
     //     depth = aiDifficulty;
     // }
-    const { move } = minimax(game, depth, game.turn() == 'w', aiDifficulty, -Infinity, +Infinity, true);
+    const { move } = minimax(game, depth, game.turn() == 'w', aiDifficulty, -Infinity, +Infinity, []);
+    // console.log('findBestMove', move, score, path)
     return move;
 }
 
@@ -92,7 +97,7 @@ function minimax(
     aiDifficulty,
     alpha,
     beta,
-    needMoveTracking = false,
+    path,
 ) {
     if (depth === 0 || isFinished()) {
         // if (aiDifficulty == 3) {
@@ -101,7 +106,8 @@ function minimax(
         // return evaluateBoard(game, aiDifficulty);
         // console.log('minimax, evaluateBoard3:', evaluateBoard3(game, aiDifficulty))
         const score = evaluateBoard3(game, aiDifficulty) * (isMaximizing ? 1 : -1)
-        return { move: null, score: score };
+        globalMoves.push([path.slice(0).join(' '), score]);
+        return { move: null, score: score, path: path.slice(0) };
     }
 
     const possibleMoves = getMoves();
@@ -110,18 +116,18 @@ function minimax(
     let bestScore = isMaximizing ? -Infinity : +Infinity;
     for (let i = 0; i < possibleMoves.length; i++) {
         const move = possibleMoves[i];
-        let result = game.move(move);
-        if (!result) {
-            console.error('cannot make move:', move);
-            continue
-        }
 
-        const { score } = minimax(game, depth - 1, !isMaximizing, aiDifficulty, alpha, beta);
+        game.move(move);
+        path.push(move)
+
+        const { score } = minimax(game, depth - 1, !isMaximizing, aiDifficulty, alpha, beta, path);
+
+        path.pop()
         game.undo();
 
         if ((isMaximizing && score >= bestScore) || (!isMaximizing && score <= bestScore)) {
             // Обновление лучшего хода только если needMoveTracking = true, иначе только score
-            movesScores.push({ move: needMoveTracking ? move : null, score: score });
+            movesScores.push({ move: move, score: score, path: path });
 
             bestScore = score;
 
@@ -129,8 +135,12 @@ function minimax(
         }
 
         // Альфа-бета отсечение
-        if (beta <= alpha) break;
+        if (beta <= alpha) {
+            // path.pop()
+            break;
+        }
     }
+    // console.log('getBestRandomMove', movesScores)
     return getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
 }
 
@@ -166,6 +176,12 @@ function evaluatePawnAdvancement(color) {
     return score;
 }
 
+// 2. Новые аспекты: подсчет пешек и оценка разменов
+function evaluatePawnCount(color) {
+    const count = getPawns(color).length;
+    return count * 50; // +50 за каждую пешку
+}
+
 
 function evaluateBoard3(game, aiDifficulty) {
     if (aiDifficulty == 1) {
@@ -183,15 +199,15 @@ function evaluateBoard3(game, aiDifficulty) {
         }
     }
 
-    if (aiDifficulty == 3) {
+    if (aiDifficulty >= 3) {
         whiteScore += evaluatePawnAdvancement('w')
         blackScore += evaluatePawnAdvancement('b')
     }
 
-    // if (aiDifficulty == 4) {
-    //     whiteScore += evaluatePassedPawns('w')
-    //     blackScore += evaluatePassedPawns('b')
-    // }
+    if (aiDifficulty == 4) {
+        whiteScore += evaluatePawnCount('w')
+        blackScore += evaluatePawnCount('b')
+    }
 
     // if (aiDifficulty == 5) {
     //     whiteScore += evaluatePassedPawns2('w')
@@ -546,4 +562,6 @@ function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {
 module.exports = {
     'makeAiMove': makeAiMove,
     'run_game': run_game,
+    'findBestMove': findBestMove,
+    'evaluateBoard3': evaluateBoard3,
 }

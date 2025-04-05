@@ -1,9 +1,8 @@
 const { Chess } = require('./chess.js')
-const { getMoves, getResultLabel, initializeGame, isFinished, drawGame, sleep } = require('./game.js');
+const { getMoves, initializeGame, isFinished, drawGame, sleep } = require('./game.js');
 globalThis.initializeGame = initializeGame;
 globalThis.isFinished = isFinished;
 globalThis.getMoves = getMoves;
-globalThis.getResultLabel = getResultLabel;
 globalThis.drawGame = drawGame;
 globalThis.sleep = sleep;
 
