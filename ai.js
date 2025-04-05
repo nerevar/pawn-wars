@@ -151,15 +151,21 @@ function getPawns(color = null) {
 }
 
 function evaluatePawnAdvancement(color) {
-    // бонус за расстояние до финиша: +70 за пешку на 7 ряду для белых, +60 на 6м ряду и т.п.
+    // бонус за расстояние до финиша
     let score = 0;
     const promotionRow = color === 'w' ? 7 : 0;
     getPawns(color).forEach(pawn => {
         const distance = Math.abs(pawn.row - promotionRow);
-        score += (7 - distance) * 10; // +70 за пешку на 7 ряду для белых
+        switch (distance) {
+            case 0: score += +Infinity;  // победа
+            case 1: score += 10000;  // предпоследний ряд - почти победа
+            case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
+            default: score += (7 - distance) * 10; // бонус за расстояние для остальных клеток
+        }
     });
     return score;
 }
+
 
 function evaluateBoard3(game, aiDifficulty) {
     if (aiDifficulty == 1) {
@@ -177,10 +183,20 @@ function evaluateBoard3(game, aiDifficulty) {
         }
     }
 
-    if (aiDifficulty >= 3) {
+    if (aiDifficulty == 3) {
         whiteScore += evaluatePawnAdvancement('w')
         blackScore += evaluatePawnAdvancement('b')
     }
+
+    // if (aiDifficulty == 4) {
+    //     whiteScore += evaluatePassedPawns('w')
+    //     blackScore += evaluatePassedPawns('b')
+    // }
+
+    // if (aiDifficulty == 5) {
+    //     whiteScore += evaluatePassedPawns2('w')
+    //     blackScore += evaluatePassedPawns2('b')
+    // }
 
     return whiteScore - blackScore;
 }

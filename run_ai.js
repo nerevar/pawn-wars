@@ -78,10 +78,11 @@ function zScore(p) {
     return t - (a[0] + a[1] * t + a[2] * t * t) / (1 + b[0] * t + b[1] * t * t + b[2] * t * t * t);
 }
 
+// run_game(1, 3, 3, true)
 
-const N = 1000;
-const ai1 = 3;
-const ai2 = 1;
+const N = 100;
+const ai1 = 4;
+const ai2 = 3;
 
 console.log(`start ${N} games`)
 
@@ -110,11 +111,7 @@ p-value: ${result.pValue}
 /*
 Версии aiDifficulty:
 * 0/1 - Random
-* 2 - Добавляется проверка на isFinished, depth=2
-* 3 - Добавляется проверка на isFinished, depth=3
-* 4 - Добавляется проверка на isFinished, depth=4
-* 5 - Добавляется проверка на isFinished, depth=5
-* 6 - Добавляется проверка на isFinished, depth=6
-
-
+* 2 - Добавляется проверка на isFinished
+* 3 - evaluatePawnAdvancement — бонус за расстояние до финиша
+* evaluatePassedPawns - свободный проход - нет улучшения
 */
