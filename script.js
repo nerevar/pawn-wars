@@ -6,6 +6,8 @@ var aiDifficulty = 1; // Default AI difficulty
 var gameMode = "playerw"; // Default game mode
 var aiColor = 'b'; // Default AI Color
 var globalMoves = [];
+var godMode = false;
+var IS_DEBUG = false;
 
 var ipInfo = {};
 
@@ -68,22 +70,32 @@ function preventPageScroll(event) {
     event.preventDefault();
 }
 
+var draggedPiece = {};
 function onDragStart(source, piece, position, orientation) {
     // do not pick up pieces if the game is over
     if (isFinished()) {
         return false;
     }
 
-    // only pick up pieces for the side to move, respect AI
-    if (gameMode !== "2player") {
-        if ((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')) {
-            return false;
+    if (!godMode) {
+        // only pick up pieces for the side to move, respect AI
+        if (gameMode !== "2player") {
+            if ((game.turn() === 'w' && aiColor === 'w') || (game.turn() === 'b' && aiColor === 'b')) {
+                return false;
+            }
+        } else {
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
         }
-    } else {
-        if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-            (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-            return false;
-        }
+    }
+
+    draggedPiece = {
+        source: source,
+        piece: piece,
+        position: position,
+        orientation: orientation,
     }
 
     document.addEventListener('touchmove', preventPageScroll, {
@@ -95,6 +107,7 @@ function onDragStart(source, piece, position, orientation) {
 
 function onDrop(source, target) {
     document.removeEventListener('touchmove', preventPageScroll);
+
     // see if the move is legal
     var move = {
         from: source,
@@ -102,18 +115,23 @@ function onDrop(source, target) {
         promotion: 'q' // NOTE: always promote to a queen for simplicity. Shouldn't matter in pawn wars.
     };
 
-    try {
-        var result = game.move(move);
-    } catch (e) {
-        document.removeEventListener('touchmove', preventPageScroll);
-        return 'snapback'; // illegal move
+    if (godMode) {
+        game.put({ type: draggedPiece.piece[1].toLowerCase(), color: draggedPiece.piece[0] }, target);
+        game.remove(source)
+    } else {
+        try {
+            game.move(move);
+        } catch (e) {
+            // document.removeEventListener('touchmove', preventPageScroll);
+            return 'snapback'; // illegal move
+        }
+        updateStatus();
+        updateURL();
     }
 
-    updateStatus();
-    updateURL();
-    document.removeEventListener('touchmove', preventPageScroll);
+    // document.removeEventListener('touchmove', preventPageScroll);
 
-    if (gameMode !== "2player" && !isFinished() && result) { // Only call AI if a valid move was made
+    if (!godMode &&  gameMode !== "2player" && !isFinished()) { // Only call AI if a valid move was made
         // AI's turn
         window.setTimeout(function () { makeAiMove(aiDifficulty) }, 250);
     }
@@ -135,7 +153,7 @@ function updateStatus(isInitial) {
         }
     } else {
         // game still on
-        status = 'Current turn: ' + game.turn() === 'w' ? 'White' : 'Black';
+        status = 'Current turn: ' + (game.turn() === 'w' ? 'White' : 'Black');
     }
 
     $status.text(status);
@@ -151,7 +169,7 @@ function initializeUI(fen) {
         onDrop: onDrop,
         onSnapEnd: onSnapEnd,
         pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
-        orientation: gameMode == 'playerw' ? 'white' : 'black'
+        orientation: gameMode == 'playerb' ? 'black' : 'white'
     };
 
     board = Chessboard('board', config);
@@ -194,6 +212,24 @@ $('#undoBtn').on('click', function () {
     updateURL();
 });
 
+
+$('#godModeBtn').on('click', function () {
+    godMode = !godMode;
+    $('#godModeBtn').text('God mode:' + (godMode ? 'on' : 'off'))
+    if (godMode) {
+        const chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        for (let col = 0; col < 8; col++) {
+            for (let row = 0; row < 8; row++) {
+                const to = chars[col] + (7 - row + 1);
+                const $square = $('#board .square-' + to);
+                $square.prepend(`<div class="square-index">${to} [${7 - row}][${col}]</div>`);
+            }
+        }
+    } else {
+        $('.square-index').remove();
+    }
+});
+
 $('#movesBtn').on('click', function () {
     if ($('.square-hint').length) {
         console.log('remove hints');
@@ -203,21 +239,20 @@ $('#movesBtn').on('click', function () {
         const possibleMoves = getMoves({ verbose: true });
         const depth = 3;
         let moves_list = [];
-        console.log('add hints for', possibleMoves);
+        console.log('add hints for', possibleMoves.map(move => move.san));
 
         for (const move of possibleMoves) {
-            if (game.move(move) !== null) {
-                const { score } = minimax(game, depth, game.turn() == 'w', aiDifficulty, -Infinity, +Infinity, [move.san]);
-                game.undo();
-                console.info(`evaluate move ${move.san}: ${score}`)
-                moves_list.push({ move: move, score: score });
-            }
+            game.move(move)
+            const { score } = minimax(depth, (game.turn() === 'w'), aiDifficulty, -Infinity, Infinity, [move.san]);
+            game.undo();
+            console.info(`evaluate move ${move.san}: ${score}`)
+            moves_list.push({ move: move, score: score });
         }
         moves_list.sort((a, b) => b.score - a.score);
 
         moves_list.forEach((moveData, index) => {
             const $square = $('#board .square-' + moveData.move.to);
-            $square.append(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score}</div>`);
+            $square.prepend(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score}</div>`);
         });
     }
 });
@@ -226,18 +261,19 @@ $('#movesBtn').on('click', function () {
 $(document).ready(function () {
     pageLoadTime = Date.now();
 
+    // TODO: uncomment
     // Get IP Info
-    $.ajax({
-        url: 'https://ipinfo.io?token=' + atob(ipInfoToken),  // free account, 50k requests per month
-        dataType: 'jsonp',
-        success: function (data) {
-            ipInfo = data;
-            console.log('IP Info:', data);
-        },
-        error: function (error) {
-            console.error('Error getting IP info:', error);
-        }
-    });
+    // $.ajax({
+    //     url: 'https://ipinfo.io?token=' + atob(ipInfoToken),  // free account, 50k requests per month
+    //     dataType: 'jsonp',
+    //     success: function (data) {
+    //         ipInfo = data;
+    //         console.log('IP Info:', data);
+    //     },
+    //     error: function (error) {
+    //         console.error('Error getting IP info:', error);
+    //     }
+    // });
 
     $("#startWhiteAiBtn").on("click", function () {
         gameMode = "playerw";

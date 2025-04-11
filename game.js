@@ -8,6 +8,16 @@ function drawGame() {
     // return game.ascii().replaceAll('p', 'B').replaceAll('P', 'W')
 }
 
+function drawBoard() {
+    return game.board().map(row =>
+        row.map(piece => {
+            if (piece === null) return ' ';
+            if (piece.color === 'b') return '♟';
+            if (piece.color === 'w') return '♗';
+        })
+    );
+}
+
 function getMoves(options) {
     options = options || {};
     const turn = game.turn();
@@ -99,6 +109,22 @@ function extractMovesFromPGN(pgn) {
     return pgn.split('\n').pop()
 }
 
+function getPawns(color = null) {
+    const board = game.board();
+    const pawns = [];
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece && piece.type === 'p' && (!color || piece.color === color)) {
+                piece.row = 7 - row;
+                piece.col = col;
+                pawns.push(piece);
+            }
+        }
+    }
+    return pawns;
+}
+
 module.exports = {
     'isFinished': isFinished,
     'getMoves': getMoves,
@@ -106,4 +132,5 @@ module.exports = {
     'drawGame': drawGame,
     'sleep': sleep,
     'extractMovesFromPGN': extractMovesFromPGN,
+    'getPawns': getPawns,
 }

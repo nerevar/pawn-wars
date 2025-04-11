@@ -7,18 +7,20 @@ function makeAiMove(aiDifficulty) {
     var possibleMoves = getMoves();
     if (possibleMoves.length === 0) return;
 
-    const bestMove = findBestMove(game, aiDifficulty)
-    console.log('makeAiMove', bestMove, 'aiDifficulty', aiDifficulty)
-    if (!bestMove) {
+    const { move, score } = findBestMove(game, aiDifficulty)
+    console.log('makeAiMove', move, 'aiDifficulty', aiDifficulty, 'score:', score)
+    if (!move) {
         // No moves available, return null. evaluateBoard will handle the consequences
     }
 
-    game.move(bestMove);
+    game.move(move);
     if (typeof window !== 'undefined') {
         board.position(game.fen());
         updateStatus();
         updateURL();
     }
+
+    return { move, score }
 }
 
 function run_game(cnt, ai1, ai2, interactive) {
@@ -28,70 +30,105 @@ function run_game(cnt, ai1, ai2, interactive) {
         while (!isFinished()) {
             if (getMoves().length === 0) break;
             const currentAiLevel = game.turn() == 'w' ? ai1 : ai2;
-            const bestMove = findBestMove(game, currentAiLevel);
-            if (!bestMove) break;
-            game.move(bestMove);
+            const { move } = findBestMove(game, currentAiLevel);
+            if (!move) break;
+            game.move(move);
 
             if (interactive) {
                 console.clear();
-                console.log('game.turn()', game.turn(), 'makeAiMove', bestMove, 'aiDifficulty', currentAiLevel, 'boardScore', evaluateBoard3(game, currentAiLevel));
+                console.log('game.turn()', game.turn(), 'makeAiMove', move, 'aiDifficulty', currentAiLevel, 'boardScore', evaluateBoard3(currentAiLevel));
                 console.log(drawGame());
                 sleep(500);
             }
         }
         // console.log('finished:', isFinished(), 'turn', game.turn())
         stats.push(isFinished())
+
+        // Отображение прогресса каждые 10 игр
+        if ((i + 1) % 10 === 0) {
+            process.stdout.write('.'); // Выводим точку
+            if ((i + 1) === cnt) {
+                process.stdout.write('\n'); // Переходим на новую строку, если все игры завершены
+            }
+        }
     }
     return stats;
 }
 
+function getPathDepth(path) {
+    return path.split(' ').length;
+}
+
 function getBestRandomMove(movesScores, mode = 'max') {
-    if (movesScores.length === 0) {
-        return null; // Если массив пуст, возвращаем null
-    }
+    if (movesScores.length === 0) return null;
 
     const epsilon = 0.001;
     let bestScore = movesScores[0].score;
-    let bestMoves = [movesScores[0].move];
-    let bestPath = [movesScores[0].path];
+    let minDepth = getPathDepth(movesScores[0].path);
+    let bestCandidates = [movesScores[0]];
 
     for (let i = 1; i < movesScores.length; i++) {
-        const currentScore = movesScores[i].score;
-        const diff = Math.abs(currentScore - bestScore);
+        const current = movesScores[i];
+        const currentDepth = getPathDepth(current.path);
+        const scoreDiff = current.score - bestScore;
 
-        if (diff < epsilon) {
-            // Если score примерно равен текущему лучшему, добавляем в список
-            bestMoves.push(movesScores[i].move);
-            bestPath.push(movesScores[i].path);
-        } else if (
-            (mode === 'max' && currentScore > bestScore) ||
-            (mode === 'min' && currentScore < bestScore)
-        ) {
-            // Если нашли новый лучший score (max/min), обновляем список
-            bestScore = currentScore;
-            bestMoves = [movesScores[i].move];
-            bestPath = [movesScores[i].path];
+        // Определяем, является ли текущий score лучше
+        const isBetterScore = mode === 'max'
+            ? scoreDiff > epsilon
+            : scoreDiff < -epsilon;
+
+        // Если score значительно лучше - полный сброс кандидатов
+        if (isBetterScore) {
+            bestScore = current.score;
+            minDepth = currentDepth;
+            bestCandidates = [current];
+            continue;
+        }
+
+        // Если score примерно равен - проверяем глубину
+        if (Math.abs(scoreDiff) <= epsilon) {
+            if (currentDepth < minDepth) {
+                // Новая минимальная глубина - сброс кандидатов
+                minDepth = currentDepth;
+                bestCandidates = [current];
+            } else if (currentDepth === minDepth) {
+                // Такая же глубина - добавляем в кандидаты
+                bestCandidates.push(current);
+            }
         }
     }
 
-    // Возвращаем случайный ход из отфильтрованных
-    const randomIndex = Math.floor(Math.random() * bestMoves.length);
-    return { move: bestMoves[randomIndex], score: bestScore, path: bestPath[randomIndex] };
+    // Случайный выбор из финальных кандидатов
+    const randomIndex = Math.floor(Math.random() * bestCandidates.length);
+    const winner = bestCandidates[randomIndex];
+    return {
+        move: winner.move,
+        score: winner.score,
+        path: winner.path
+    };
 }
 
-
 function findBestMove(game, aiDifficulty) {
-    let depth = 3;
+    let depth = 3 + 1;
     // if (aiDifficulty >= 2 && aiDifficulty <= 6) {
     //     depth = aiDifficulty;
     // }
-    const { move } = minimax(game, depth, game.turn() == 'w', aiDifficulty, -Infinity, +Infinity, []);
-    // console.log('findBestMove', move, score, path)
-    return move;
+    const { move, score } = minimax(depth, game.turn() == 'w', aiDifficulty, -Infinity, Infinity, []);
+    // console.log('findBestMove', move, score)
+    return { move, score };
+}
+
+
+function evaluateMove(move, aiDifficulty, depth = 3) {
+    depth = depth || 3;
+    const moveStr = typeof move === 'string' ? move : move?.san;
+    game.move(moveStr)
+    const { score } = minimax((game.turn() === 'w'), aiDifficulty, -Infinity, Infinity, [moveStr]);
+    game.undo();
+    return { move, score }
 }
 
 function minimax(
-    game,
     depth,
     isMaximizing,
     aiDifficulty,
@@ -99,66 +136,48 @@ function minimax(
     beta,
     path,
 ) {
+    // console.error('arguments', [].slice.apply(arguments));
     if (depth === 0 || isFinished()) {
-        // if (aiDifficulty == 3) {
-        //     return evaluateBoard2(game, aiDifficulty);
-        // }
-        // return evaluateBoard(game, aiDifficulty);
-        // console.log('minimax, evaluateBoard3:', evaluateBoard3(game, aiDifficulty))
-        const score = evaluateBoard3(game, aiDifficulty) * (isMaximizing ? 1 : -1)
-        globalMoves.push([path.slice(0).join(' '), score]);
+        const score = evaluateBoard3(aiDifficulty, path)
+        globalMoves.push([path.slice(0).join(' '), score, isMaximizing]);
         return { move: null, score: score, path: path.slice(0) };
     }
 
     const possibleMoves = getMoves();
+    IS_DEBUG && console.warn('START MINIMAX. moves: ', possibleMoves, `depth ${depth}, PATH: ${path.join(' ')} isMax: ${isMaximizing}`)
     let movesScores = [];
 
-    let bestScore = isMaximizing ? -Infinity : +Infinity;
+    let bestScore = isMaximizing ? -Infinity : Infinity;
     for (let i = 0; i < possibleMoves.length; i++) {
         const move = possibleMoves[i];
 
-        game.move(move);
         path.push(move)
-
-        const { score } = minimax(game, depth - 1, !isMaximizing, aiDifficulty, alpha, beta, path);
-
-        path.pop()
+        game.move(move);
+        const { score } = minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, path);
         game.undo();
 
-        if ((isMaximizing && score >= bestScore) || (!isMaximizing && score <= bestScore)) {
+        IS_DEBUG && console.warn(`    FOR MOVE ${move} GOT SCORE: ${score} (prev ${bestScore}${(isMaximizing ? score >= bestScore : score <= bestScore) ? '!!!' : ''}), depth ${depth}, PATH: [${path.join(' ')}], isMax: ${isMaximizing}`)
+
+        if (isMaximizing ? score >= bestScore : score <= bestScore) {
+            // IS_DEBUG && console.warn(`        FOR MOVE ${move} SAVE SCORE: ${score}, depth ${depth}, PATH: ${path.join(' ')}, BestScore: ${bestScore}, isMax: ${isMaximizing}`)
             // Обновление лучшего хода только если needMoveTracking = true, иначе только score
-            movesScores.push({ move: move, score: score, path: path });
+            movesScores.push({ move: move, score: score, path: path.join(' ') });
 
             bestScore = score;
 
             isMaximizing ? alpha = Math.max(alpha, score) : beta = Math.min(beta, score);
         }
+        path.pop()
 
         // Альфа-бета отсечение
-        if (beta <= alpha) {
-            // path.pop()
-            break;
-        }
+        if (beta <= alpha) break;
     }
-    // console.log('getBestRandomMove', movesScores)
-    return getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
+
+    const val = getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
+    IS_DEBUG && console.log('getBestRandomMove', mode = isMaximizing ? 'max' : 'min', structuredClone(val), 'depth', depth, structuredClone(movesScores))
+    return val;
 }
 
-function getPawns(color = null) {
-    const board = game.board();
-    const pawns = [];
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-            const piece = board[row][col];
-            if (piece && piece.type === 'p' && (!color || piece.color === color)) {
-                piece.row = row;
-                piece.col = col;
-                pawns.push(piece);
-            }
-        }
-    }
-    return pawns;
-}
 
 function evaluatePawnAdvancement(color) {
     // бонус за расстояние до финиша
@@ -167,8 +186,8 @@ function evaluatePawnAdvancement(color) {
     getPawns(color).forEach(pawn => {
         const distance = Math.abs(pawn.row - promotionRow);
         switch (distance) {
-            case 0: score += +Infinity;  // победа
-            case 1: score += 10000;  // предпоследний ряд - почти победа
+            case 0: score += Infinity;  // победа
+            case 1: score += 1000;  // предпоследний ряд - почти победа
             case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
             default: score += (7 - distance) * 10; // бонус за расстояние для остальных клеток
         }
@@ -182,37 +201,153 @@ function evaluatePawnCount(color) {
     return count * 50; // +50 за каждую пешку
 }
 
+function evaluateCaptureOpportunities(color) {
+    let score = 0;
+    const enemyColor = color === 'w' ? 'b' : 'w';
+    const forward = color === 'w' ? 1 : -1;
 
-function evaluateBoard3(game, aiDifficulty) {
+    getPawns(color).forEach(pawn => {
+        const captureCols = [pawn.col - 1, pawn.col + 1];
+
+        captureCols.forEach(cc => {
+            if (cc < 0 || cc >= 8) return;
+
+            const targetRow = pawn.row + forward;
+            if (targetRow < 0 || targetRow >= 8) return;
+
+            const target = game.board()[7 - targetRow][cc];
+            if (target && target.color === enemyColor) {
+                // Проверка безопасности взятия
+
+                // Проверяем защиту своей пешки после взятия
+                // число attackers включает в себя саму атакующую пешку
+                const attackers = [cc - 1, cc + 1].filter(dc =>
+                    dc >= 0 && dc <= 7 && game.board()[7 - pawn.row][dc]?.color === color
+                ).length;
+
+                // Проверяем ответное взятие (защитники пешки)
+                const defenders = [cc - 1, cc + 1].filter(dc =>
+                    dc >= 0 && dc <= 7 && game.board()[7 - (targetRow + forward)][dc]?.color === enemyColor
+                ).length;
+
+                let move_score = 0
+                if (attackers == defenders) {
+                    move_score = 20; // Нейтральный размен
+                    // TODO: учитывать, выгодны ли нейтральные размены или нет
+                } else if (attackers === 1 && defenders == 0) {
+                    move_score = 80;
+                } else {
+                    move_score = (attackers - defenders) * 40;
+                }
+
+                IS_DEBUG && console.error(`ВЗЯТИЕ ${pawn.square} x ${target.square}. attackers: ${attackers}, defenders: ${defenders}, move_score: ${move_score}`)
+
+                score += move_score
+            }
+        });
+    });
+
+    return score;
+}
+
+function evaluateFreePath(color) {
+    let score = 0;
+    const enemyColor = color === 'w' ? 'b' : 'w';
+    const forward = color === 'w' ? 1 : -1;
+    const promotionRow = color === 'w' ? 7 : 0;
+
+    getPawns(color).forEach(pawn => {
+        let isRowFree = true;
+        for (let r = pawn.row + 1; r < promotionRow; r += forward) {
+            if (game.board()[7 - r][pawn.col]) {
+                isRowFree = false;
+                break;
+            }
+        }
+        let isFullPathFree = isRowFree ? true : false;
+        if (isRowFree) {
+            for (let c = Math.max(pawn.col - 1, 0); c <= Math.min(pawn.col + 1, 7); ++c) {
+                for (let r = pawn.row + 1; r < promotionRow; r += forward) {
+                    if (game.board()[7 - r][c] && game.board()[7 - r][c].color == enemyColor) {
+                        isFullPathFree = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (isRowFree) {
+            // score += 20;
+            if (isFullPathFree) {
+                score += 100
+            }
+        }
+        IS_DEBUG && console.error(pawn.square, 'isRowFree', isRowFree, 'isFullPathFree', isFullPathFree)
+    });
+
+    return score;
+}
+
+
+function evaluateBoard3(aiDifficulty, path) {
     if (aiDifficulty == 1) {
         return 0;
     }
 
-    let whiteScore = 0;
-    let blackScore = 0;
-
     if (aiDifficulty >= 2) {
         // Winning condition check
-        const isFinishedResult = getIsFinishedWeight(isFinished())
-        if (isFinishedResult != 0) {
-            return isFinishedResult;
+        let finishedScore = getIsFinishedWeight(isFinished(), path)
+        if (finishedScore != 0) {
+            IS_DEBUG && console.log('evaluateBoard3', isFinished(), finishedScore);
+            return finishedScore;
         }
     }
 
+    let whitePawnAdvancement = 0;
+    let blackPawnAdvancement = 0;
     if (aiDifficulty >= 3) {
-        whiteScore += evaluatePawnAdvancement('w')
-        blackScore += evaluatePawnAdvancement('b')
+        whitePawnAdvancement = evaluatePawnAdvancement('w')
+        blackPawnAdvancement = evaluatePawnAdvancement('b')
     }
 
-    if (aiDifficulty == 4) {
-        whiteScore += evaluatePawnCount('w')
-        blackScore += evaluatePawnCount('b')
+    let whitePawnCount = 0;
+    let blackPawnCount = 0;
+    if (aiDifficulty >= 4) {
+        whitePawnCount = evaluatePawnCount('w')
+        blackPawnCount = evaluatePawnCount('b')
     }
 
-    // if (aiDifficulty == 5) {
-    //     whiteScore += evaluatePassedPawns2('w')
-    //     blackScore += evaluatePassedPawns2('b')
-    // }
+    let whiteCaptureOpportunities = 0;
+    let blackCaptureOpportunities = 0;
+    if (aiDifficulty >= 5) {
+        whiteCaptureOpportunities += evaluateCaptureOpportunities('w')
+        blackCaptureOpportunities += evaluateCaptureOpportunities('b')
+    }
+
+    let whiteFreePath = 0;
+    let blackFreePath = 0;
+    if (aiDifficulty == 6) {
+        whiteFreePath += evaluateFreePath('w')
+        blackFreePath += evaluateFreePath('b')
+    }
+
+    const whiteScore = whitePawnAdvancement + whitePawnCount + whiteCaptureOpportunities + whiteFreePath;
+    const blackScore = blackPawnAdvancement + blackPawnCount + blackCaptureOpportunities + blackFreePath;
+
+    IS_DEBUG && console.log('evaluateBoard3', whiteScore, blackScore, whiteScore - blackScore, {
+        'scores': {
+            'whitePawnAdvancement': whitePawnAdvancement,
+            'whitePawnCount': whitePawnCount,
+            'blackPawnAdvancement': blackPawnAdvancement,
+            'blackPawnCount': blackPawnCount,
+            'whiteCaptureOpportunities': whiteCaptureOpportunities,
+            'blackCaptureOpportunities': blackCaptureOpportunities,
+            'whiteFreePath': whiteFreePath,
+            'blackFreePath': blackFreePath,
+            'whiteScore': whiteScore,
+            'blackScore': blackScore,
+            'totalScore': whiteScore - blackScore,
+        }
+    }, drawBoard())
 
     return whiteScore - blackScore;
 }
@@ -532,19 +667,22 @@ function getAdjacentThreatPenalty(piece, board) {
     return adjacentThreatPenalty;
 }
 
-function getIsFinishedWeight(isFinishedResult) {
+function getIsFinishedWeight(isFinishedResult, path) {
     if (!isFinishedResult) {
         return 0;
     }
 
+    let score = 0;
     if (isFinishedResult.includes('w')) {
-        return +Infinity;
+        score = +100000;
+        score += 100 - path?.length;
     }
     if (isFinishedResult.includes('b')) {
-        return -Infinity;
+        score = -100000;
+        score -= 100 - path?.length;
     }
 
-    return 0;
+    return score;
 }
 
 function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {

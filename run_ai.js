@@ -1,10 +1,11 @@
 const { Chess } = require('./chess.js')
-const { getMoves, initializeGame, isFinished, drawGame, sleep } = require('./game.js');
+const { getMoves, initializeGame, isFinished, drawGame, sleep, getPawns } = require('./game.js');
 globalThis.initializeGame = initializeGame;
 globalThis.isFinished = isFinished;
 globalThis.getMoves = getMoves;
 globalThis.drawGame = drawGame;
 globalThis.sleep = sleep;
+globalThis.getPawns = getPawns;
 
 const { run_game } = require('./ai.js');
 
@@ -13,6 +14,9 @@ globalThis.game = game;
 globalThis.Chess = Chess;
 globalThis.gameMode = 'playerw';
 globalThis.aiColor = 'b';
+
+globalThis.globalMoves = [];
+globalThis.IS_DEBUG = false;
 
 
 
@@ -80,8 +84,8 @@ function zScore(p) {
 // run_game(1, 3, 3, true)
 
 const N = 100;
-const ai1 = 4;
-const ai2 = 3;
+const ai1 = 7;
+const ai2 = 4;
 
 console.log(`start ${N} games`)
 

@@ -43,7 +43,7 @@ async function main() {
                     game.move(bestMove);
 
                     console.clear();
-                    console.log('game.turn()', game.turn(), 'makeAiMove', bestMove, 'aiDifficulty', currentAiLevel, 'boardScore', evaluateBoard3(game, currentAiLevel));
+                    console.log('game.turn()', game.turn(), 'makeAiMove', bestMove, 'aiDifficulty', currentAiLevel, 'boardScore', evaluateBoard3(currentAiLevel));
                     console.log(extractMovesFromPGN(game.pgn()))
                     return isFinished() === null;
 
