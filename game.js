@@ -8,14 +8,24 @@ function drawGame() {
     // return game.ascii().replaceAll('p', 'B').replaceAll('P', 'W')
 }
 
-function drawBoard() {
-    return game.board().map(row =>
-        row.map(piece => {
+function drawBoard(moveFrom) {
+    let i = 0;
+    return game.board().map(row => {
+        let j = -1;
+        return '' + (8 - i++) + ' ' + row.map(piece => {
+            j++;
+            if (moveFrom && (squareToCoords(moveFrom).row == (8 - i)) && squareToCoords(moveFrom).col == j) return '·';
             if (piece === null) return ' ';
-            if (piece.color === 'b') return '♟';
-            if (piece.color === 'w') return '♗';
-        })
-    );
+            if (piece.color === 'b') return piece.type === 'q' ? '♛' : '♟';
+            if (piece.color === 'w') return piece.type === 'q' ? '♕' : '♗';
+        }).join('  ')
+    }).concat(['  ' + ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].join('  ')])
+}
+
+function squareToCoords(square) {
+    const col = square.charCodeAt(0) - 'a'.charCodeAt(0);
+    const row = parseInt(square.substring(1)) - 1;
+    return { row, col };
 }
 
 function getMoves(options) {
@@ -109,7 +119,37 @@ function extractMovesFromPGN(pgn) {
     return pgn.split('\n').pop()
 }
 
+function rank(square) {
+    // Extracts the zero-based rank of an 0x88 square.
+    return square >> 4;
+}
+function file(square) {
+    // Extracts the zero-based file of an 0x88 square.
+    return square & 0xf;
+}
+
 function getPawns(color = null) {
+    const pawns = [];
+    for (let i = 0; i < 120; i++) {
+        if (game._board[i]) {
+            const piece = game._board[i];
+            if (piece.type === 'p' && (!color || piece.color === color)) {
+                pawns.push({
+                    color: piece.color,
+                    row: 8 - rank(i),
+                    col: file(i),
+                    // algebraic: algebraic(i),
+                })
+            }
+        }
+        if ((i + 1) & 0x88) {
+            i += 8;
+        }
+    }
+    return pawns;
+}
+
+function getPawnsSlow(color = null) {
     const board = game.board();
     const pawns = [];
     for (let row = 0; row < 8; row++) {
@@ -133,4 +173,5 @@ module.exports = {
     'sleep': sleep,
     'extractMovesFromPGN': extractMovesFromPGN,
     'getPawns': getPawns,
+    'drawBoard': drawBoard,
 }

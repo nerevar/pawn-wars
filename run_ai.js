@@ -1,25 +1,26 @@
-const { Chess } = require('./chess.js')
-const { getMoves, initializeGame, isFinished, drawGame, sleep, getPawns } = require('./game.js');
+const { Chess} = require('./chess.js')
+globalThis.Chess = Chess;
+
+const { getMoves, initializeGame, isFinished, drawGame, sleep, getPawns, drawBoard, extractMovesFromPGN } = require('./game.js');
 globalThis.initializeGame = initializeGame;
 globalThis.isFinished = isFinished;
 globalThis.getMoves = getMoves;
 globalThis.drawGame = drawGame;
 globalThis.sleep = sleep;
 globalThis.getPawns = getPawns;
+globalThis.drawBoard = drawBoard;
+globalThis.extractMovesFromPGN = extractMovesFromPGN;
 
-const { run_game } = require('./ai.js');
+const { run_game, debug } = require('./ai.js');
+globalThis.debug = debug;
 
 var game = new Chess();
 globalThis.game = game;
-globalThis.Chess = Chess;
 globalThis.gameMode = 'playerw';
 globalThis.aiColor = 'b';
 
-globalThis.globalMoves = [];
 globalThis.IS_DEBUG = false;
-
-
-
+globalThis.ENABLE_LOGGING = false;
 
 function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
     // 1. Разделение игр между сторонами
@@ -83,8 +84,8 @@ function zScore(p) {
 
 // run_game(1, 3, 3, true)
 
-const N = 100;
-const ai1 = 7;
+const N = 1;
+const ai1 = 4;
 const ai2 = 4;
 
 console.log(`start ${N} games`)

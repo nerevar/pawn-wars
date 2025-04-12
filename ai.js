@@ -1,4 +1,232 @@
 // ai.js
+var debug = {
+    log: {},
+    currentBranch: [],
+    config: { enabled: true, depth: 0 }
+};
+
+function findBestMove(aiDifficulty, getAllMoves=false) {
+    debug.log = {}; // Сброс лога
+    debug.tree = {};
+    debug.config.depth = 3 + 1; // Сохраняем глубину поиска
+    return minimax(
+        debug.config.depth,
+        game.turn() == 'w',
+        aiDifficulty,
+        -Infinity,
+        Infinity,
+        { path: [], branchId: 'root' }, // Инициализация корневой ветки
+        getAllMoves,
+    );
+}
+
+function minimax(
+    depth,
+    isMaximizing,
+    aiDifficulty,
+    alpha,
+    beta,
+    ctx,
+    getAllMoves=false,
+) {
+    let evaluation = {};
+    let nodeId = '';
+    if (ENABLE_LOGGING) {
+        nodeId = `${ctx.branchId}-${depth}-${isMaximizing ? 'max' : 'min'}`;
+        evaluation = {
+            nodeId,
+            depth: debug.config.depth - depth,
+            movePath: [...ctx.path],
+            alpha,
+            beta,
+            components: {},
+            children: []
+        };
+    }
+
+    // Запись в лог перед вычислениями
+    ENABLE_LOGGING && (debug.log[nodeId] = evaluation);
+
+    // console.error('arguments', [].slice.apply(arguments));
+    if (depth === 0 || isFinished()) {
+        const score = evaluateBoard3(aiDifficulty, ENABLE_LOGGING ? nodeId : null, ctx.path)
+
+        if (ENABLE_LOGGING) {
+            evaluation.score = score;
+            evaluation.isLeaf = true;
+        }
+        return { score, evaluation };
+    }
+
+    const possibleMoves = getMoves({ verbose: true});
+    IS_DEBUG && console.warn('START MINIMAX. moves: ', possibleMoves, `depth ${depth}, PATH: ${path.join(' ')} isMax: ${isMaximizing}`)
+    let movesScores = [];
+
+    let bestScore = isMaximizing ? -Infinity : Infinity;
+    for (let i = 0; i < possibleMoves.length; i++) {
+        const move = possibleMoves[i];
+
+        const childCtx = {
+            path: [...ctx.path, move.san],
+        };
+
+        let current_node = {};
+        if (ENABLE_LOGGING) {
+            branchId = `${nodeId}-${i}`
+            childCtx['branchId'] = branchId;
+
+            getTreePath(ctx.path)[move.san] = {
+                score: 0,
+                turn: game.turn() + ' ' + (isMaximizing ? '↑' : '↓'),
+            };
+            current_node = getTreePath(ctx.path)[move.san];
+        }
+
+        game.move(move.san);
+        const data = minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, childCtx);
+        const score = data.score;
+        if (ENABLE_LOGGING) {
+            const childEval = data.evaluation;
+            const drawnGame = drawBoard(move.from);
+
+            current_node['score'] = score;
+            current_node['zcomponents'] = childEval.components;
+            current_node['zdrawn'] = drawnGame;
+            current_node['znodeId'] = nodeId;
+
+            // Запись данных дочернего узла
+            evaluation.children.push({
+                move: move.san,
+                score,
+                alpha,
+                beta,
+                pruned: beta <= alpha,
+                components: childEval.components
+            });
+        }
+
+        game.undo();
+
+        IS_DEBUG && console.warn(`    FOR MOVE ${move.san} GOT SCORE: ${score} (prev ${bestScore}${(isMaximizing ? score >= bestScore : score <= bestScore) ? '!!!' : ''}), depth ${depth}, isMax: ${isMaximizing}`)
+
+        if (getAllMoves == true) {
+            movesScores.push({ move: move, score, evaluation, path: childCtx.path });
+            continue
+        }
+
+        if (isMaximizing ? score >= bestScore : score <= bestScore) {
+            // IS_DEBUG && console.warn(`        FOR MOVE ${move} SAVE SCORE: ${score}, depth ${depth}, PATH: ${path.join(' ')}, BestScore: ${bestScore}, isMax: ${isMaximizing}`)
+            // Обновление лучшего хода только если needMoveTracking = true, иначе только score
+            movesScores.push({ move: move, score, evaluation, path: childCtx.path });
+
+            bestScore = score;
+
+            isMaximizing ? alpha = Math.max(alpha, score) : beta = Math.min(beta, score);
+        }
+
+        // Альфа-бета отсечение
+        if (beta <= alpha) break;
+    }
+
+    if (getAllMoves === true) return movesScores;
+
+    const val = getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
+    IS_DEBUG && console.log('getBestRandomMove', mode = isMaximizing ? 'max' : 'min', structuredClone(val), 'depth', depth, structuredClone(movesScores))
+    return val;
+}
+
+function evaluateBoard3(aiDifficulty, nodeId, path) {
+    if (aiDifficulty == 1) {
+        // Запись компонентов в лог
+        ENABLE_LOGGING && (debug.log[nodeId].components = {
+            white: {},
+            black: {},
+            finishedScore: 0,
+            total: 0,
+        });
+
+        return 0;
+    }
+
+    let finishedScore = 0;
+    if (aiDifficulty >= 2) {
+        // Winning condition check
+        // console.log(debug.log[nodeId])
+        finishedScore = getIsFinishedWeight(isFinished(), path)
+        if (finishedScore != 0) {
+            //     IS_DEBUG && console.log('evaluateBoard3', isFinished(), finishedScore);
+            // Запись компонентов в лог
+            ENABLE_LOGGING && (debug.log[nodeId].components = {
+                white: {},
+                black: {},
+                finishedScore: finishedScore,
+                total: finishedScore,
+            });
+            return finishedScore;
+        }
+    }
+
+    let whitePawnAdvancement = 0;
+    let blackPawnAdvancement = 0;
+    if (aiDifficulty >= 3) {
+        whitePawnAdvancement = evaluatePawnAdvancement('w')
+        blackPawnAdvancement = evaluatePawnAdvancement('b')
+    }
+
+    let whitePawnCount = 0;
+    let blackPawnCount = 0;
+    if (aiDifficulty >= 4) {
+        whitePawnCount = evaluatePawnCount('w')
+        blackPawnCount = evaluatePawnCount('b')
+    }
+
+    let whiteCaptureOpportunities = 0;
+    let blackCaptureOpportunities = 0;
+    if (aiDifficulty >= 5) {
+        whiteCaptureOpportunities += evaluateCaptureOpportunities('w')
+        blackCaptureOpportunities += evaluateCaptureOpportunities('b')
+    }
+
+    let whiteFreePath = 0;
+    let blackFreePath = 0;
+    if (aiDifficulty == 6) {
+        whiteFreePath += evaluateFreePath('w')
+        blackFreePath += evaluateFreePath('b')
+    }
+
+    const whiteScore = whitePawnAdvancement + whitePawnCount + whiteCaptureOpportunities + whiteFreePath;
+    const blackScore = blackPawnAdvancement + blackPawnCount + blackCaptureOpportunities + blackFreePath;
+
+    IS_DEBUG && console.log('evaluateBoard3', whiteScore, blackScore, whiteScore - blackScore, {
+        'scores': {
+            'whitePawnAdvancement': whitePawnAdvancement,
+            'whitePawnCount': whitePawnCount,
+            'blackPawnAdvancement': blackPawnAdvancement,
+            'blackPawnCount': blackPawnCount,
+            'whiteCaptureOpportunities': whiteCaptureOpportunities,
+            'blackCaptureOpportunities': blackCaptureOpportunities,
+            'whiteFreePath': whiteFreePath,
+            'blackFreePath': blackFreePath,
+            'whiteScore': whiteScore,
+            'blackScore': blackScore,
+            'finishedScore': finishedScore,
+            'totalScore': finishedScore + whiteScore - blackScore,
+        }
+    }, drawBoard())
+
+    // Запись компонентов в лог
+    ENABLE_LOGGING && (debug.log[nodeId].components = {
+        white: { whitePawnAdvancement, whitePawnCount, whiteCaptureOpportunities, whiteFreePath },
+        black: { blackPawnAdvancement, blackPawnCount, blackCaptureOpportunities, blackFreePath },
+        finishedScore: finishedScore,
+        total: whiteScore - blackScore,
+    });
+
+    // return debug.log[nodeId].components.total;
+
+    return whiteScore - blackScore;
+}
+
 function makeAiMove(aiDifficulty) {
     if (isFinished()) return;
 
@@ -7,7 +235,7 @@ function makeAiMove(aiDifficulty) {
     var possibleMoves = getMoves();
     if (possibleMoves.length === 0) return;
 
-    const { move, score } = findBestMove(game, aiDifficulty)
+    const { move, score } = findBestMove(aiDifficulty)
     console.log('makeAiMove', move, 'aiDifficulty', aiDifficulty, 'score:', score)
     if (!move) {
         // No moves available, return null. evaluateBoard will handle the consequences
@@ -23,36 +251,40 @@ function makeAiMove(aiDifficulty) {
     return { move, score }
 }
 
-function run_game(cnt, ai1, ai2, interactive) {
+function run_game(cnt, ai1, ai2) {
     let stats = []
     for (var i = 0; i < cnt; ++i) {
         initializeGame()
         while (!isFinished()) {
             if (getMoves().length === 0) break;
             const currentAiLevel = game.turn() == 'w' ? ai1 : ai2;
-            const { move } = findBestMove(game, currentAiLevel);
+            const { move } = findBestMove(currentAiLevel);
             if (!move) break;
             game.move(move);
-
-            if (interactive) {
-                console.clear();
-                console.log('game.turn()', game.turn(), 'makeAiMove', move, 'aiDifficulty', currentAiLevel, 'boardScore', evaluateBoard3(currentAiLevel));
-                console.log(drawGame());
-                sleep(500);
-            }
         }
         // console.log('finished:', isFinished(), 'turn', game.turn())
         stats.push(isFinished())
 
-        // Отображение прогресса каждые 10 игр
+        // Отображение прогресса игр
+        process.stdout.write('.')
         if ((i + 1) % 10 === 0) {
-            process.stdout.write('.'); // Выводим точку
-            if ((i + 1) === cnt) {
-                process.stdout.write('\n'); // Переходим на новую строку, если все игры завершены
-            }
+            process.stdout.write('\n');
+            // if ((i + 1) === cnt) {
+            //     process.stdout.write('\n'); // Переходим на новую строку, если все игры завершены
+            // }
         }
+        ENABLE_LOGGING && logGame(ai1, ai2, isFinished(), game);
     }
+    console.log('')
     return stats;
+}
+
+function getTreePath(path) {
+    let current_node = debug.tree;
+    for (item of path) {
+        current_node = current_node[item]
+    }
+    return current_node;
 }
 
 function getPathDepth(path) {
@@ -62,60 +294,51 @@ function getPathDepth(path) {
 function getBestRandomMove(movesScores, mode = 'max') {
     if (movesScores.length === 0) return null;
 
-    const epsilon = 0.001;
-    let bestScore = movesScores[0].score;
-    let minDepth = getPathDepth(movesScores[0].path);
-    let bestCandidates = [movesScores[0]];
+    let bestScore = mode === 'max' ? -Infinity : Infinity;
+    let minPathLength = Infinity;
+    let candidates = [];
+    let currentCandidateIndex = 0;
 
-    for (let i = 1; i < movesScores.length; i++) {
-        const current = movesScores[i];
-        const currentDepth = getPathDepth(current.path);
-        const scoreDiff = current.score - bestScore;
+    // Одна итерация с одновременной проверкой всех условий
+    for (let i = 0; i < movesScores.length; i++) {
+        const move = movesScores[i];
 
-        // Определяем, является ли текущий score лучше
+        // Проверка score
         const isBetterScore = mode === 'max'
-            ? scoreDiff > epsilon
-            : scoreDiff < -epsilon;
+            ? move.score > bestScore
+            : move.score < bestScore;
 
-        // Если score значительно лучше - полный сброс кандидатов
+        // Обновление лучшего score и сброс данных
         if (isBetterScore) {
-            bestScore = current.score;
-            minDepth = currentDepth;
-            bestCandidates = [current];
-            continue;
+            bestScore = move.score;
+            minPathLength = Infinity;
+            currentCandidateIndex = 0;
+            candidates.length = 0;
         }
 
-        // Если score примерно равен - проверяем глубину
-        if (Math.abs(scoreDiff) <= epsilon) {
-            if (currentDepth < minDepth) {
-                // Новая минимальная глубина - сброс кандидатов
-                minDepth = currentDepth;
-                bestCandidates = [current];
-            } else if (currentDepth === minDepth) {
-                // Такая же глубина - добавляем в кандидаты
-                bestCandidates.push(current);
+        // Только для ходов с текущим лучшим score
+        if (move.score === bestScore) {
+            // Проверка длины пути
+            if (move.path.length < minPathLength) {
+                minPathLength = move.path.length;
+                currentCandidateIndex = 0;
+                candidates.length = 0;
+            }
+
+            // Добавление в кандидаты
+            if (move.path.length === minPathLength) {
+                if (currentCandidateIndex < candidates.length) {
+                    candidates[currentCandidateIndex++] = move;
+                } else {
+                    candidates.push(move);
+                    currentCandidateIndex++;
+                }
             }
         }
     }
 
-    // Случайный выбор из финальных кандидатов
-    const randomIndex = Math.floor(Math.random() * bestCandidates.length);
-    const winner = bestCandidates[randomIndex];
-    return {
-        move: winner.move,
-        score: winner.score,
-        path: winner.path
-    };
-}
-
-function findBestMove(game, aiDifficulty) {
-    let depth = 3 + 1;
-    // if (aiDifficulty >= 2 && aiDifficulty <= 6) {
-    //     depth = aiDifficulty;
-    // }
-    const { move, score } = minimax(depth, game.turn() == 'w', aiDifficulty, -Infinity, Infinity, []);
-    // console.log('findBestMove', move, score)
-    return { move, score };
+    // Случайный выбор из кандидатов
+    return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 
@@ -127,57 +350,6 @@ function evaluateMove(move, aiDifficulty, depth = 3) {
     game.undo();
     return { move, score }
 }
-
-function minimax(
-    depth,
-    isMaximizing,
-    aiDifficulty,
-    alpha,
-    beta,
-    path,
-) {
-    // console.error('arguments', [].slice.apply(arguments));
-    if (depth === 0 || isFinished()) {
-        const score = evaluateBoard3(aiDifficulty, path)
-        globalMoves.push([path.slice(0).join(' '), score, isMaximizing]);
-        return { move: null, score: score, path: path.slice(0) };
-    }
-
-    const possibleMoves = getMoves();
-    IS_DEBUG && console.warn('START MINIMAX. moves: ', possibleMoves, `depth ${depth}, PATH: ${path.join(' ')} isMax: ${isMaximizing}`)
-    let movesScores = [];
-
-    let bestScore = isMaximizing ? -Infinity : Infinity;
-    for (let i = 0; i < possibleMoves.length; i++) {
-        const move = possibleMoves[i];
-
-        path.push(move)
-        game.move(move);
-        const { score } = minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, path);
-        game.undo();
-
-        IS_DEBUG && console.warn(`    FOR MOVE ${move} GOT SCORE: ${score} (prev ${bestScore}${(isMaximizing ? score >= bestScore : score <= bestScore) ? '!!!' : ''}), depth ${depth}, PATH: [${path.join(' ')}], isMax: ${isMaximizing}`)
-
-        if (isMaximizing ? score >= bestScore : score <= bestScore) {
-            // IS_DEBUG && console.warn(`        FOR MOVE ${move} SAVE SCORE: ${score}, depth ${depth}, PATH: ${path.join(' ')}, BestScore: ${bestScore}, isMax: ${isMaximizing}`)
-            // Обновление лучшего хода только если needMoveTracking = true, иначе только score
-            movesScores.push({ move: move, score: score, path: path.join(' ') });
-
-            bestScore = score;
-
-            isMaximizing ? alpha = Math.max(alpha, score) : beta = Math.min(beta, score);
-        }
-        path.pop()
-
-        // Альфа-бета отсечение
-        if (beta <= alpha) break;
-    }
-
-    const val = getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
-    IS_DEBUG && console.log('getBestRandomMove', mode = isMaximizing ? 'max' : 'min', structuredClone(val), 'depth', depth, structuredClone(movesScores))
-    return val;
-}
-
 
 function evaluatePawnAdvancement(color) {
     // бонус за расстояние до финиша
@@ -240,7 +412,7 @@ function evaluateCaptureOpportunities(color) {
                     move_score = (attackers - defenders) * 40;
                 }
 
-                IS_DEBUG && console.error(`ВЗЯТИЕ ${pawn.square} x ${target.square}. attackers: ${attackers}, defenders: ${defenders}, move_score: ${move_score}`)
+                IS_DEBUG && console.error(`ВЗЯТИЕ ${pawn?.square} x ${target.square}. attackers: ${attackers}, defenders: ${defenders}, move_score: ${move_score}`)
 
                 score += move_score
             }
@@ -281,76 +453,218 @@ function evaluateFreePath(color) {
                 score += 100
             }
         }
-        IS_DEBUG && console.error(pawn.square, 'isRowFree', isRowFree, 'isFullPathFree', isFullPathFree)
+        IS_DEBUG && console.error(pawn?.square, 'isRowFree', isRowFree, 'isFullPathFree', isFullPathFree)
     });
 
     return score;
 }
 
 
-function evaluateBoard3(aiDifficulty, path) {
-    if (aiDifficulty == 1) {
-        return 0;
+
+
+function printDebugLog2(debugLog, options = {}) {
+    // Настройки по умолчанию
+    const config = {
+        maxDepth: Infinity,              // Максимальная глубина отображения
+        showComponents: true,            // Показывать компоненты оценки
+        showPrunedBranches: true,        // Показывать обрезанные ветви
+        colorize: true,                  // Использовать цвета
+        indentSize: 4,                   // Размер отступа
+        compactComponents: false,        // Компактное отображение компонентов
+        // rootNodeId: "root-3-min",        // ID корневого узла
+        showOnlyBestPath: false,         // Показывать только лучший путь
+        ...options
+    };
+
+    // // Получение корневого узла
+    // const rootNode = debugLog[config.rootNodeId];
+    // if (!rootNode) {
+    //     console.error("Корневой узел не найден!");
+    //     return;
+    // }
+
+    console.log('%c🔍 Анализ дерева ходов', 'font-size: 16px; font-weight: bold; color: blue;');
+
+    // Карта глубины -> список узлов
+    const nodesByDepth = {};
+    // Карта для отслеживания лучших ходов
+    const bestMoves = {};
+
+    // Собираем узлы по глубине
+    Object.entries(debugLog).forEach(([nodeId, node]) => {
+        if (!nodesByDepth[node.depth]) {
+            nodesByDepth[node.depth] = [];
+        }
+        nodesByDepth[node.depth].push(node);
+    });
+
+    // Находим лучшие ходы для каждой глубины
+    Object.keys(nodesByDepth).forEach(depth => {
+        const nodesAtDepth = nodesByDepth[depth];
+        nodesAtDepth.forEach(node => {
+            if (!node.children || node.children.length === 0) return;
+
+            // Находим лучший ход
+            const isMax = node.nodeId.includes('-max');
+            let bestScore = isMax ? -Infinity : Infinity;
+            let bestMove = null;
+
+            node.children.forEach(child => {
+                if (isMax && child.score > bestScore) {
+                    bestScore = child.score;
+                    bestMove = child.move;
+                } else if (!isMax && child.score < bestScore) {
+                    bestScore = child.score;
+                    bestMove = child.move;
+                }
+            });
+
+            if (bestMove) {
+                bestMoves[node.nodeId] = bestMove;
+            }
+        });
+    });
+
+    // Определяем лучший путь из корня
+    let bestPath = [];
+    let currentNode = rootNode;
+    while (currentNode && bestMoves[currentNode.nodeId]) {
+        const bestMove = bestMoves[currentNode.nodeId];
+        bestPath.push(bestMove);
+
+        // Находим следующий узел в лучшем пути
+        const nextDepth = currentNode.depth + 1;
+        const moveIndex = currentNode.children.findIndex(c => c.move === bestMove);
+        if (moveIndex === -1) break;
+
+        const childNodeId = `${currentNode.nodeId}-${moveIndex}-${currentNode.nodeId.includes('-max') ? 'min' : 'max'}`;
+        currentNode = debugLog[childNodeId];
     }
 
-    if (aiDifficulty >= 2) {
-        // Winning condition check
-        let finishedScore = getIsFinishedWeight(isFinished(), path)
-        if (finishedScore != 0) {
-            IS_DEBUG && console.log('evaluateBoard3', isFinished(), finishedScore);
-            return finishedScore;
+    console.log('%c🌟 Лучший путь: ' + bestPath.join(' → '),
+        'font-size: 14px; font-weight: bold; color: green;');
+
+    // Функция для отображения узла
+    function printNode(node, indent = 0) {
+        if (!node) return;
+        if (node.depth > config.maxDepth) return;
+
+        const isMax = node.nodeId.includes('-max');
+        const indentStr = ' '.repeat(indent * config.indentSize);
+        const movePathStr = node.movePath.join(' → ') || 'Начальная позиция';
+        const playerType = isMax ? 'Макс (Белые)' : 'Мин (Черные)';
+        const nodeTypeEmoji = isMax ? '⬆️' : '⬇️';
+
+        // Проверяем, является ли узел частью лучшего пути
+        const isPartOfBestPath = node.movePath.length > 0 &&
+            node.movePath.every((move, idx) => idx >= bestPath.length || move === bestPath[idx]);
+
+        // Если показываем только лучший путь, проверяем
+        if (config.showOnlyBestPath && !isPartOfBestPath && node !== rootNode) {
+            return;
+        }
+
+        // Определяем стиль для узла
+        let style = '';
+        if (config.colorize) {
+            if (isPartOfBestPath) {
+                style = 'color: green; font-weight: bold;';
+            } else if (node.isLeaf) {
+                style = 'color: gray;';
+            } else {
+                style = isMax ? 'color: blue;' : 'color: red;';
+            }
+        }
+
+        // Заголовок узла
+        console.log(
+            `%c${indentStr}${nodeTypeEmoji} [${node.depth}] ${playerType}: ${movePathStr}` +
+            (node.score !== undefined ? ` (Оценка: ${node.score})` : ''),
+            style
+        );
+
+        // Альфа-бета параметры
+        if (node.alpha !== null || node.beta !== null) {
+            console.log(`${indentStr}  α: ${node.alpha !== null ? node.alpha : 'N/A'}, β: ${node.beta !== null ? node.beta : 'N/A'}`);
+        }
+
+        // Отображение компонентов оценки
+        if (config.showComponents && node.components && Object.keys(node.components).length > 0) {
+            console.log(`${indentStr}  🧩 Компоненты оценки:`);
+
+            if (config.compactComponents) {
+                // Компактное отображение
+                const componentsStr = Object.entries(node.components)
+                    .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+                    .join(', ');
+                console.log(`${indentStr}    ${componentsStr}`);
+            } else {
+                // Подробное отображение
+                const processComponents = (components, subIndent = '') => {
+                    Object.entries(components).forEach(([key, value]) => {
+                        if (typeof value === 'object' && value !== null) {
+                            console.log(`${indentStr}    ${subIndent}${key}:`);
+                            processComponents(value, subIndent + '  ');
+                        } else if (value !== 0 && value !== undefined) { // Пропускаем нулевые значения
+                            console.log(`${indentStr}    ${subIndent}${key}: ${value}`);
+                        }
+                    });
+                };
+                processComponents(node.components);
+            }
+        }
+
+        // Отображение дочерних узлов (доступных ходов)
+        if (node.children && node.children.length > 0) {
+            console.log(`${indentStr}  🔀 Доступные ходы (${node.children.length}):`);
+
+            // Сортируем ходы по оценке
+            const sortedChildren = [...node.children].sort((a, b) =>
+                isMax ? b.score - a.score : a.score - b.score
+            );
+
+            sortedChildren.forEach((child, idx) => {
+                const isBestMove = child.move === bestMoves[node.nodeId];
+                const moveStyle = config.colorize && isBestMove ? 'color: green; font-weight: bold;' : '';
+                const prunedText = child.pruned ? ' ✂️ обрезано' : '';
+                const childText = `${indentStr}    ${isBestMove ? '★' : '•'} ${child.move}: ${child.score}${prunedText}`;
+
+                console.log(`%c${childText}`, moveStyle);
+
+                // Если это обрезанная ветвь и не нужно показывать такие ветви, пропускаем
+                if (child.pruned && !config.showPrunedBranches) return;
+
+                // Находим дочерний узел для дальнейшего отображения
+                const childIdx = node.children.findIndex(c => c.move === child.move);
+                if (childIdx !== -1) {
+                    const childNodeId = `${node.nodeId}-${childIdx}-${isMax ? 'min' : 'max'}`;
+                    const childNode = debugLog[childNodeId];
+
+                    if (childNode) {
+                        printNode(childNode, indent + 1);
+                    }
+                }
+            });
+        } else if (node.isLeaf) {
+            console.log(`${indentStr}  🍃 Лист (терминальная позиция)`);
         }
     }
 
-    let whitePawnAdvancement = 0;
-    let blackPawnAdvancement = 0;
-    if (aiDifficulty >= 3) {
-        whitePawnAdvancement = evaluatePawnAdvancement('w')
-        blackPawnAdvancement = evaluatePawnAdvancement('b')
-    }
+    // Запускаем отображение с корневого узла
+    printNode(rootNode);
 
-    let whitePawnCount = 0;
-    let blackPawnCount = 0;
-    if (aiDifficulty >= 4) {
-        whitePawnCount = evaluatePawnCount('w')
-        blackPawnCount = evaluatePawnCount('b')
-    }
+    // Общая статистика
+    const totalNodes = Object.keys(debugLog).length;
+    const maxDepthFound = Math.max(...Object.keys(nodesByDepth).map(Number));
+    const leafNodes = Object.values(debugLog).filter(node => node.isLeaf).length;
 
-    let whiteCaptureOpportunities = 0;
-    let blackCaptureOpportunities = 0;
-    if (aiDifficulty >= 5) {
-        whiteCaptureOpportunities += evaluateCaptureOpportunities('w')
-        blackCaptureOpportunities += evaluateCaptureOpportunities('b')
-    }
-
-    let whiteFreePath = 0;
-    let blackFreePath = 0;
-    if (aiDifficulty == 6) {
-        whiteFreePath += evaluateFreePath('w')
-        blackFreePath += evaluateFreePath('b')
-    }
-
-    const whiteScore = whitePawnAdvancement + whitePawnCount + whiteCaptureOpportunities + whiteFreePath;
-    const blackScore = blackPawnAdvancement + blackPawnCount + blackCaptureOpportunities + blackFreePath;
-
-    IS_DEBUG && console.log('evaluateBoard3', whiteScore, blackScore, whiteScore - blackScore, {
-        'scores': {
-            'whitePawnAdvancement': whitePawnAdvancement,
-            'whitePawnCount': whitePawnCount,
-            'blackPawnAdvancement': blackPawnAdvancement,
-            'blackPawnCount': blackPawnCount,
-            'whiteCaptureOpportunities': whiteCaptureOpportunities,
-            'blackCaptureOpportunities': blackCaptureOpportunities,
-            'whiteFreePath': whiteFreePath,
-            'blackFreePath': blackFreePath,
-            'whiteScore': whiteScore,
-            'blackScore': blackScore,
-            'totalScore': whiteScore - blackScore,
-        }
-    }, drawBoard())
-
-    return whiteScore - blackScore;
+    console.log('\n%c📊 Статистика анализа:', 'font-size: 14px; font-weight: bold;');
+    console.log(`Всего узлов: ${totalNodes}`);
+    console.log(`Максимальная глубина: ${maxDepthFound}`);
+    console.log(`Терминальных позиций: ${leafNodes}`);
+    console.log(`Лучший ход: ${bestMoves[rootNode.nodeId] || 'не определен'}`);
 }
+
 
 function evaluateBoard(game, aiDifficulty) {
     let score = 0;
@@ -697,9 +1011,18 @@ function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {
     return 0
 }
 
+function logGame(ai1, ai2, isFinished, game) {
+    const fs = require('fs');
+
+    const pgn = extractMovesFromPGN(game.pgn());
+
+    fs.appendFileSync('games.log', `${ai1};${ai2};${isFinished};${pgn}\n`);
+}
+
 module.exports = {
-    'makeAiMove': makeAiMove,
-    'run_game': run_game,
-    'findBestMove': findBestMove,
-    'evaluateBoard3': evaluateBoard3,
+    makeAiMove,
+    run_game,
+    findBestMove,
+    evaluateBoard3,
+    debug,
 }

@@ -37,7 +37,7 @@ async function main() {
                 case '1':
                     if (isFinished()) return true;
                     const currentAiLevel = game.turn() == 'w' ? ai1 : ai2;
-                    const bestMove = findBestMove(game, currentAiLevel);
+                    const bestMove = findBestMove(currentAiLevel);
 
                     history.push(bestMove);
                     game.move(bestMove);

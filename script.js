@@ -5,9 +5,9 @@ var $pgn = $('#pgn');
 var aiDifficulty = 1; // Default AI difficulty
 var gameMode = "playerw"; // Default game mode
 var aiColor = 'b'; // Default AI Color
-var globalMoves = [];
 var godMode = false;
 var IS_DEBUG = false;
+var ENABLE_LOGGING = true;
 
 var ipInfo = {};
 
@@ -234,26 +234,27 @@ $('#movesBtn').on('click', function () {
     if ($('.square-hint').length) {
         console.log('remove hints');
         $('.square-hint').remove();
+        $('.square-index').remove();
     } else {
-        globalMoves = [];
-        const possibleMoves = getMoves({ verbose: true });
-        const depth = 3;
-        let moves_list = [];
-        console.log('add hints for', possibleMoves.map(move => move.san));
+        const moveScores = findBestMove(aiDifficulty, getAllMoves = true);
+        moveScores.sort((a, b) => game.turn === 'w' ? b.score - a.score : a.score - b.score)
+        // console.log(moveScores);
 
-        for (const move of possibleMoves) {
-            game.move(move)
-            const { score } = minimax(depth, (game.turn() === 'w'), aiDifficulty, -Infinity, Infinity, [move.san]);
-            game.undo();
-            console.info(`evaluate move ${move.san}: ${score}`)
-            moves_list.push({ move: move, score: score });
-        }
-        moves_list.sort((a, b) => b.score - a.score);
-
-        moves_list.forEach((moveData, index) => {
+        moveScores.forEach((moveData, index) => {
             const $square = $('#board .square-' + moveData.move.to);
             $square.prepend(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score}</div>`);
         });
+
+        // координаты клеток
+        const chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        for (let col = 0; col < 8; col++) {
+            for (let row = 0; row < 8; row++) {
+                const to = chars[col] + (7 - row + 1);
+                const $square = $('#board .square-' + to);
+                $square.prepend(`<div class="square-index">${to} [${7 - row}][${col}]</div>`);
+            }
+        }
+
     }
 });
 
