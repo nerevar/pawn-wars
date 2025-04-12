@@ -136,7 +136,7 @@ function getPawns(color = null) {
             if (piece.type === 'p' && (!color || piece.color === color)) {
                 pawns.push({
                     color: piece.color,
-                    row: 8 - rank(i),
+                    row: 8 - rank(i) - 1,
                     col: file(i),
                     // algebraic: algebraic(i),
                 })

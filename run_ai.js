@@ -84,9 +84,9 @@ function zScore(p) {
 
 // run_game(1, 3, 3, true)
 
-const N = 1;
-const ai1 = 4;
-const ai2 = 4;
+const N = 100;
+const ai1 = 7;
+const ai2 = 6;
 
 console.log(`start ${N} games`)
 

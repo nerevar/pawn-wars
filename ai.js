@@ -172,6 +172,11 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
         whitePawnAdvancement = evaluatePawnAdvancement('w')
         blackPawnAdvancement = evaluatePawnAdvancement('b')
     }
+    // if (aiDifficulty == 42) {
+    //     whitePawnAdvancement = evaluatePawnAdvancement2('w')
+    //     blackPawnAdvancement = evaluatePawnAdvancement2('b')
+    // }
+
 
     let whitePawnCount = 0;
     let blackPawnCount = 0;
@@ -194,8 +199,15 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
         blackFreePath += evaluateFreePath('b')
     }
 
-    const whiteScore = whitePawnAdvancement + whitePawnCount + whiteCaptureOpportunities + whiteFreePath;
-    const blackScore = blackPawnAdvancement + blackPawnCount + blackCaptureOpportunities + blackFreePath;
+    let whiteMajority = 0;
+    let blackMajority = 0;
+    if (aiDifficulty == 7) {
+        whiteMajority += evaluateMajority('w')
+        blackMajority += evaluateMajority('b')
+    }
+
+    const whiteScore = whitePawnAdvancement + whitePawnCount + whiteCaptureOpportunities + whiteFreePath + whiteMajority;
+    const blackScore = blackPawnAdvancement + blackPawnCount + blackCaptureOpportunities + blackFreePath + blackMajority;
 
     IS_DEBUG && console.log('evaluateBoard3', whiteScore, blackScore, whiteScore - blackScore, {
         'scores': {
@@ -207,6 +219,9 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
             'blackCaptureOpportunities': blackCaptureOpportunities,
             'whiteFreePath': whiteFreePath,
             'blackFreePath': blackFreePath,
+            'whiteMajority': whiteMajority,
+            'blackMajority': blackMajority,
+
             'whiteScore': whiteScore,
             'blackScore': blackScore,
             'finishedScore': finishedScore,
@@ -216,8 +231,8 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
 
     // Запись компонентов в лог
     ENABLE_LOGGING && (debug.log[nodeId].components = {
-        white: { whitePawnAdvancement, whitePawnCount, whiteCaptureOpportunities, whiteFreePath },
-        black: { blackPawnAdvancement, blackPawnCount, blackCaptureOpportunities, blackFreePath },
+        white: { whitePawnAdvancement, whitePawnCount, whiteCaptureOpportunities, whiteFreePath, whiteMajority },
+        black: { blackPawnAdvancement, blackPawnCount, blackCaptureOpportunities, blackFreePath, blackMajority },
         finishedScore: finishedScore,
         total: whiteScore - blackScore,
     });
@@ -351,6 +366,130 @@ function evaluateMove(move, aiDifficulty, depth = 3) {
     return { move, score }
 }
 
+
+
+function getMajorityRowsScore(firstPawn, secondPawn, opponentPawn) {
+    const myColor = firstPawn.color;
+    const targetRow = { 'w': 7, 'b': 0 };
+
+    // Расстояние до превращения для каждой пешки
+    const firstDistance = Math.abs(targetRow[myColor] - firstPawn.row);
+    const secondDistance = Math.abs(targetRow[myColor] - secondPawn.row);
+
+    // Среднее арифметическое количества шагов
+    const distance = Math.ceil((firstDistance + secondDistance) / 2);
+
+    switch (distance) {
+        case 0: return Infinity;  // победа
+        case 1: return 1000;  // предпоследний ряд - почти победа
+        case 2: return 500;  // бонус за 6ю для белых и 3ю для черных горизонталь
+        case 3: return 200;  // бонус за 6ю для белых и 3ю для черных горизонталь
+        case 4: return 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
+        case 5: return 50;  // бонус за 6ю для белых и 3ю для черных горизонталь
+        // default: ; // бонус за расстояние для остальных клеток
+    }
+
+    return 0
+}
+
+
+
+
+function evaluateMajority(color) {
+    // Получаем пешки обоих цветов
+    const myPawns = getPawns(color);
+    const opponentColor = color === 'w' ? 'b' : 'w';
+    const opponentPawns = getPawns(opponentColor);
+
+    let totalScore = 0;
+
+    // Определяем функцию для проверки, находится ли пешка противника "впереди"
+    const isOpponentAhead = (myPawn, oppPawn) => {
+        if (color === 'w') {
+            // Для белых "впереди" означает большее значение row
+            return oppPawn.row > myPawn.row;
+        } else {
+            // Для черных "впереди" означает меньшее значение row
+            return oppPawn.row < myPawn.row;
+        }
+    };
+
+    // Группируем наши пешки по столбцам
+    const myPawnsByCol = {};
+    myPawns.forEach(pawn => {
+        if (!myPawnsByCol[pawn.col]) {
+            myPawnsByCol[pawn.col] = [];
+        }
+        myPawnsByCol[pawn.col].push(pawn);
+    });
+
+    // Проверяем каждую пару соседних столбцов с нашими пешками
+    const columnsWithMyPawns = Object.keys(myPawnsByCol).map(Number).sort((a, b) => a - b);
+
+    for (let i = 0; i < columnsWithMyPawns.length - 1; i++) {
+        const col1 = columnsWithMyPawns[i];
+        const col2 = columnsWithMyPawns[i + 1];
+
+        // Проверяем, что столбцы соседние
+        if (col2 - col1 !== 1) continue;
+
+        // Нашли пару соседних столбцов с нашими пешками
+        const myPawnsInCol1 = myPawnsByCol[col1];
+        const myPawnsInCol2 = myPawnsByCol[col2];
+        const myPawnsInArea = [...myPawnsInCol1, ...myPawnsInCol2];
+
+        // У нас должно быть не менее двух пешек в этих столбцах
+        if (myPawnsInArea.length < 2) continue;
+
+        // Берем две самые продвинутые наши пешки
+        const sortedMyPawns = [...myPawnsInArea].sort((a, b) => {
+            // Для белых более продвинутые - с большей row, для черных - с меньшей
+            return color === 'w' ? b.row - a.row : a.row - b.row;
+        });
+
+        const firstPawn = sortedMyPawns[0];
+        const secondPawn = sortedMyPawns[1];
+
+        // Найдем самую выдвинутую нашу пешку для определения "впереди"
+        const mostAdvancedRow = color === 'w' ? Math.max(firstPawn.row, secondPawn.row) : Math.min(firstPawn.row, secondPawn.row);
+
+        // Проверяем пешки противника в области (в тех же и соседних столбцах)
+        const relevantOpponentCols = [col1 - 1, col1, col2, col2 + 1].filter(col => col >= 0);
+
+        // Фильтруем только пешки противника, которые находятся впереди наших пешек
+        const opponentPawnsAhead = opponentPawns.filter(pawn => {
+            // Проверяем, что пешка находится в рассматриваемых столбцах
+            if (!relevantOpponentCols.includes(pawn.col)) return false;
+
+            // Проверяем, что пешка находится впереди самой продвинутой нашей пешки
+            if (color === 'w') {
+                return pawn.row > mostAdvancedRow;
+            } else {
+                return pawn.row < mostAdvancedRow;
+            }
+        });
+
+        // Если у противника ровно одна пешка впереди наших в этой области
+        if (opponentPawnsAhead.length === 1) {
+            const opponentPawn = opponentPawnsAhead[0];
+
+            // Вычисляем score в зависимости от близости к финишу
+            const score = getMajorityRowsScore(firstPawn, secondPawn, opponentPawn);
+            // console.log(color, score, firstPawn, secondPawn, opponentPawn)
+            totalScore += score;
+        }
+    }
+
+    return totalScore;
+}
+
+
+
+
+
+
+
+
 function evaluatePawnAdvancement(color) {
     // бонус за расстояние до финиша
     let score = 0;
@@ -362,6 +501,22 @@ function evaluatePawnAdvancement(color) {
             case 1: score += 1000;  // предпоследний ряд - почти победа
             case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
             default: score += (7 - distance) * 10; // бонус за расстояние для остальных клеток
+        }
+    });
+    return score;
+}
+
+function evaluatePawnAdvancement2(color) {
+    // бонус за расстояние до финиша
+    let score = 0;
+    const promotionRow = color === 'w' ? 7 : 0;
+    getPawns(color).forEach(pawn => {
+        const distance = Math.abs(pawn.row - promotionRow);
+        switch (distance) {
+            case 0: score += Infinity;  // победа
+            case 1: score += 1000;  // предпоследний ряд - почти победа
+            case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
+            default: score += (7 - distance) * 5; // бонус за расстояние для остальных клеток
         }
     });
     return score;
@@ -457,212 +612,6 @@ function evaluateFreePath(color) {
     });
 
     return score;
-}
-
-
-
-
-function printDebugLog2(debugLog, options = {}) {
-    // Настройки по умолчанию
-    const config = {
-        maxDepth: Infinity,              // Максимальная глубина отображения
-        showComponents: true,            // Показывать компоненты оценки
-        showPrunedBranches: true,        // Показывать обрезанные ветви
-        colorize: true,                  // Использовать цвета
-        indentSize: 4,                   // Размер отступа
-        compactComponents: false,        // Компактное отображение компонентов
-        // rootNodeId: "root-3-min",        // ID корневого узла
-        showOnlyBestPath: false,         // Показывать только лучший путь
-        ...options
-    };
-
-    // // Получение корневого узла
-    // const rootNode = debugLog[config.rootNodeId];
-    // if (!rootNode) {
-    //     console.error("Корневой узел не найден!");
-    //     return;
-    // }
-
-    console.log('%c🔍 Анализ дерева ходов', 'font-size: 16px; font-weight: bold; color: blue;');
-
-    // Карта глубины -> список узлов
-    const nodesByDepth = {};
-    // Карта для отслеживания лучших ходов
-    const bestMoves = {};
-
-    // Собираем узлы по глубине
-    Object.entries(debugLog).forEach(([nodeId, node]) => {
-        if (!nodesByDepth[node.depth]) {
-            nodesByDepth[node.depth] = [];
-        }
-        nodesByDepth[node.depth].push(node);
-    });
-
-    // Находим лучшие ходы для каждой глубины
-    Object.keys(nodesByDepth).forEach(depth => {
-        const nodesAtDepth = nodesByDepth[depth];
-        nodesAtDepth.forEach(node => {
-            if (!node.children || node.children.length === 0) return;
-
-            // Находим лучший ход
-            const isMax = node.nodeId.includes('-max');
-            let bestScore = isMax ? -Infinity : Infinity;
-            let bestMove = null;
-
-            node.children.forEach(child => {
-                if (isMax && child.score > bestScore) {
-                    bestScore = child.score;
-                    bestMove = child.move;
-                } else if (!isMax && child.score < bestScore) {
-                    bestScore = child.score;
-                    bestMove = child.move;
-                }
-            });
-
-            if (bestMove) {
-                bestMoves[node.nodeId] = bestMove;
-            }
-        });
-    });
-
-    // Определяем лучший путь из корня
-    let bestPath = [];
-    let currentNode = rootNode;
-    while (currentNode && bestMoves[currentNode.nodeId]) {
-        const bestMove = bestMoves[currentNode.nodeId];
-        bestPath.push(bestMove);
-
-        // Находим следующий узел в лучшем пути
-        const nextDepth = currentNode.depth + 1;
-        const moveIndex = currentNode.children.findIndex(c => c.move === bestMove);
-        if (moveIndex === -1) break;
-
-        const childNodeId = `${currentNode.nodeId}-${moveIndex}-${currentNode.nodeId.includes('-max') ? 'min' : 'max'}`;
-        currentNode = debugLog[childNodeId];
-    }
-
-    console.log('%c🌟 Лучший путь: ' + bestPath.join(' → '),
-        'font-size: 14px; font-weight: bold; color: green;');
-
-    // Функция для отображения узла
-    function printNode(node, indent = 0) {
-        if (!node) return;
-        if (node.depth > config.maxDepth) return;
-
-        const isMax = node.nodeId.includes('-max');
-        const indentStr = ' '.repeat(indent * config.indentSize);
-        const movePathStr = node.movePath.join(' → ') || 'Начальная позиция';
-        const playerType = isMax ? 'Макс (Белые)' : 'Мин (Черные)';
-        const nodeTypeEmoji = isMax ? '⬆️' : '⬇️';
-
-        // Проверяем, является ли узел частью лучшего пути
-        const isPartOfBestPath = node.movePath.length > 0 &&
-            node.movePath.every((move, idx) => idx >= bestPath.length || move === bestPath[idx]);
-
-        // Если показываем только лучший путь, проверяем
-        if (config.showOnlyBestPath && !isPartOfBestPath && node !== rootNode) {
-            return;
-        }
-
-        // Определяем стиль для узла
-        let style = '';
-        if (config.colorize) {
-            if (isPartOfBestPath) {
-                style = 'color: green; font-weight: bold;';
-            } else if (node.isLeaf) {
-                style = 'color: gray;';
-            } else {
-                style = isMax ? 'color: blue;' : 'color: red;';
-            }
-        }
-
-        // Заголовок узла
-        console.log(
-            `%c${indentStr}${nodeTypeEmoji} [${node.depth}] ${playerType}: ${movePathStr}` +
-            (node.score !== undefined ? ` (Оценка: ${node.score})` : ''),
-            style
-        );
-
-        // Альфа-бета параметры
-        if (node.alpha !== null || node.beta !== null) {
-            console.log(`${indentStr}  α: ${node.alpha !== null ? node.alpha : 'N/A'}, β: ${node.beta !== null ? node.beta : 'N/A'}`);
-        }
-
-        // Отображение компонентов оценки
-        if (config.showComponents && node.components && Object.keys(node.components).length > 0) {
-            console.log(`${indentStr}  🧩 Компоненты оценки:`);
-
-            if (config.compactComponents) {
-                // Компактное отображение
-                const componentsStr = Object.entries(node.components)
-                    .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
-                    .join(', ');
-                console.log(`${indentStr}    ${componentsStr}`);
-            } else {
-                // Подробное отображение
-                const processComponents = (components, subIndent = '') => {
-                    Object.entries(components).forEach(([key, value]) => {
-                        if (typeof value === 'object' && value !== null) {
-                            console.log(`${indentStr}    ${subIndent}${key}:`);
-                            processComponents(value, subIndent + '  ');
-                        } else if (value !== 0 && value !== undefined) { // Пропускаем нулевые значения
-                            console.log(`${indentStr}    ${subIndent}${key}: ${value}`);
-                        }
-                    });
-                };
-                processComponents(node.components);
-            }
-        }
-
-        // Отображение дочерних узлов (доступных ходов)
-        if (node.children && node.children.length > 0) {
-            console.log(`${indentStr}  🔀 Доступные ходы (${node.children.length}):`);
-
-            // Сортируем ходы по оценке
-            const sortedChildren = [...node.children].sort((a, b) =>
-                isMax ? b.score - a.score : a.score - b.score
-            );
-
-            sortedChildren.forEach((child, idx) => {
-                const isBestMove = child.move === bestMoves[node.nodeId];
-                const moveStyle = config.colorize && isBestMove ? 'color: green; font-weight: bold;' : '';
-                const prunedText = child.pruned ? ' ✂️ обрезано' : '';
-                const childText = `${indentStr}    ${isBestMove ? '★' : '•'} ${child.move}: ${child.score}${prunedText}`;
-
-                console.log(`%c${childText}`, moveStyle);
-
-                // Если это обрезанная ветвь и не нужно показывать такие ветви, пропускаем
-                if (child.pruned && !config.showPrunedBranches) return;
-
-                // Находим дочерний узел для дальнейшего отображения
-                const childIdx = node.children.findIndex(c => c.move === child.move);
-                if (childIdx !== -1) {
-                    const childNodeId = `${node.nodeId}-${childIdx}-${isMax ? 'min' : 'max'}`;
-                    const childNode = debugLog[childNodeId];
-
-                    if (childNode) {
-                        printNode(childNode, indent + 1);
-                    }
-                }
-            });
-        } else if (node.isLeaf) {
-            console.log(`${indentStr}  🍃 Лист (терминальная позиция)`);
-        }
-    }
-
-    // Запускаем отображение с корневого узла
-    printNode(rootNode);
-
-    // Общая статистика
-    const totalNodes = Object.keys(debugLog).length;
-    const maxDepthFound = Math.max(...Object.keys(nodesByDepth).map(Number));
-    const leafNodes = Object.values(debugLog).filter(node => node.isLeaf).length;
-
-    console.log('\n%c📊 Статистика анализа:', 'font-size: 14px; font-weight: bold;');
-    console.log(`Всего узлов: ${totalNodes}`);
-    console.log(`Максимальная глубина: ${maxDepthFound}`);
-    console.log(`Терминальных позиций: ${leafNodes}`);
-    console.log(`Лучший ход: ${bestMoves[rootNode.nodeId] || 'не определен'}`);
 }
 
 

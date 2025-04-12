@@ -237,8 +237,16 @@ $('#movesBtn').on('click', function () {
         $('.square-index').remove();
     } else {
         const moveScores = findBestMove(aiDifficulty, getAllMoves = true);
-        moveScores.sort((a, b) => game.turn === 'w' ? b.score - a.score : a.score - b.score)
-        // console.log(moveScores);
+        // moveScores.sort((a, b) => game.turn() === 'w' ? b.score - a.score : a.score - b.score)
+        moveScores.sort((a, b) => {
+            if (game.turn() === 'w') {
+                // Для белых: по убыванию score
+                return a.score === b.score ? (Math.random() - 0.5) : b.score - a.score;
+            } else {
+                // Для черных: по возрастанию score
+                return a.score === b.score ? (Math.random() - 0.5) : a.score - b.score;
+            }
+        });
 
         moveScores.forEach((moveData, index) => {
             const $square = $('#board .square-' + moveData.move.to);
