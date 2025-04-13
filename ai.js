@@ -2,12 +2,22 @@
 var debug = {
     log: {},
     currentBranch: [],
-    config: { enabled: true, depth: 0 }
+    config: {}
 };
 
 function findBestMove(aiDifficulty, getAllMoves=false) {
-    debug.log = {}; // Сброс лога
+    debug.log = {};
     debug.tree = {};
+    debug.config = {
+        aiDifficulty: aiDifficulty,
+    };
+
+    // TODO: задать конфиг
+    if (aiDifficulty == 5) {
+        debug.config.factors = [
+            { id: 'pawnAdvancement', weight: 1.0 }
+        ]
+    }
 
     if (aiDifficulty == 1) {
         debug.config.depth = 3
@@ -22,7 +32,7 @@ function findBestMove(aiDifficulty, getAllMoves=false) {
     return minimax(
         debug.config.depth,
         game.turn() == 'w',
-        aiDifficulty,
+        debug.config,
         -Infinity,
         Infinity,
         { path: [], branchId: 'root' }, // Инициализация корневой ветки
@@ -33,7 +43,7 @@ function findBestMove(aiDifficulty, getAllMoves=false) {
 function minimax(
     depth,
     isMaximizing,
-    aiDifficulty,
+    config,
     alpha,
     beta,
     ctx,
@@ -59,7 +69,7 @@ function minimax(
 
     // console.error('arguments', [].slice.apply(arguments));
     if (depth === 0 || isFinished()) {
-        const score = evaluateBoard3(aiDifficulty, ENABLE_LOGGING ? nodeId : null, ctx.path)
+        const score = evaluateBoard(config, ENABLE_LOGGING ? nodeId : null, ctx.path)
 
         if (ENABLE_LOGGING) {
             evaluation.score = score;
@@ -93,11 +103,9 @@ function minimax(
         }
 
         game.move(move.san);
-        const data = minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, childCtx);
-        if (data === null) {
-            minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, childCtx);
-        }
+        const data = minimax(depth - 1, !isMaximizing, config, alpha, beta, childCtx);
         const score = data.score;
+
         if (ENABLE_LOGGING) {
             const childEval = data.evaluation;
             const drawnGame = drawBoard(move.from);
@@ -148,6 +156,104 @@ function minimax(
     return val;
 }
 
+
+function evaluateBoard(config, nodeId, path) {
+    if (config?.aiDifficulty === 0) {
+        ENABLE_LOGGING && logNodeFactors(nodeId, {'random': 1}, {'random': 1}, 0, 0);
+        return 0;
+    }
+
+    if (config?.aiDifficulty >= 1 && config?.aiDifficulty <= 3) {
+        const score = evaluateBoardMedium();
+        ENABLE_LOGGING && logNodeFactors(nodeId, {'medium': 1}, {'medium': 1}, 0, score);
+        return score
+    }
+
+    let finishedScore = 0;
+    if (config?.aiDifficulty >= 4) {
+        // Winning condition check
+        finishedScore = checkGameEnd(isFinished(), path)
+        if (finishedScore !== null) {
+            ENABLE_LOGGING && logNodeFactors(nodeId, {'gameEnd': 1}, {'gameEnd': 1}, finishedScore, finishedScore);
+            return finishedScore;
+        }
+    }
+
+    // Если конфиг пустой или невалидный, возвращаем 0 (или обрабатываем как ошибку)
+    if (!config || !config.factors || config.factors.length === 0) {
+        ENABLE_LOGGING && logNodeFactors(nodeId, {'emptyConfig': 1}, {'emptyConfig': 1}, 0, 0);
+        return 0; // Или вернуть оценку из evaluateBoardMedium, если это базовый уровень
+    }
+
+    let totalWhiteScore = 0;
+    let totalBlackScore = 0;
+    const whiteComponents = {};
+    const blackComponents = {};
+
+    // 2. Итерация по факторам из конфигурации
+    for (const factorConfig of config.factors) {
+        const factorDefinition = EVALUATION_FACTORS[factorConfig.id];
+
+        if (!factorDefinition) {
+            console.warn(`Evaluation factor with id "${factorConfig.id}" not found.`);
+            continue;
+        }
+
+        // Определяем параметры: объединяем дефолтные и из конфига
+        const params = {
+            ...(factorDefinition.defaultParams || {}),
+            ...(factorConfig.params || {})
+        };
+
+        // Вычисляем оценку для каждого цвета
+        const whiteFactorScore = factorDefinition.evaluate('w', params);
+        const blackFactorScore = factorDefinition.evaluate('b', params);
+
+        // Применяем вес
+        const weightedWhiteScore = whiteFactorScore * factorConfig.weight;
+        const weightedBlackScore = blackFactorScore * factorConfig.weight;
+
+        // Суммируем
+        totalWhiteScore += weightedWhiteScore;
+        totalBlackScore += weightedBlackScore;
+
+        // Сохраняем компоненты для логирования (с учетом веса)
+        if (ENABLE_LOGGING) {
+            whiteComponents[factorConfig.id] = weightedWhiteScore;
+            blackComponents[factorConfig.id] = weightedBlackScore;
+        }
+    }
+
+    // 3. Финальный счет (Белые - Черные)
+    const finalScore = totalWhiteScore - totalBlackScore;
+
+    // 4. Логирование
+    ENABLE_LOGGING && logNodeFactors(nodeId, whiteComponents, blackComponents, 0, finalScore);
+
+    return finalScore;
+}
+
+function logNodeFactors(nodeId, whiteComponents, blackComponents, finishedScore, totalScore) {
+    if (!debug.log[nodeId]) {
+        debug.log[nodeId] = {}; // Убедимся, что объект существует
+    }
+    debug.log[nodeId].components = {
+        white: whiteComponents,
+        black: blackComponents,
+        finishedScore: finishedScore,
+        total: totalScore,
+    };
+
+    IS_DEBUG && console.log('evaluateBoard', totalWhiteScore, totalBlackScore, finalScore, {
+        'scores': {
+            'white': whiteComponents,
+            'black': blackComponents,
+            'finishedScore': 0, // Так как мы уже проверили
+            'totalScore': finalScore,
+        }
+    });
+}
+
 function evaluateBoard3(aiDifficulty, nodeId, path) {
     if (aiDifficulty == 0) {
         // Запись компонентов в лог
@@ -173,7 +279,7 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
     if (aiDifficulty >= 4) {
         // Winning condition check
         // console.log(debug.log[nodeId])
-        finishedScore = getIsFinishedWeight(isFinished(), path)
+        finishedScore = checkGameEnd(isFinished(), path)
         if (finishedScore != 0) {
             //     IS_DEBUG && console.log('evaluateBoard3', isFinished(), finishedScore);
             // Запись компонентов в лог
@@ -622,8 +728,8 @@ function evaluateBoardMedium() {
     // }
 
     //Winning condition check
-    const isFinishedResult = getIsFinishedWeight(isFinished())
-    if (isFinishedResult != 0) {
+    const isFinishedResult = checkGameEnd(isFinished())
+    if (isFinishedResult !== null) {
         return isFinishedResult;
     }
 
@@ -749,7 +855,7 @@ function evaluateBoardMedium() {
     return score;
 }
 
-function evaluateBoard2(game, aiDifficulty) {
+function evaluateBoard2Deprecated(game, aiDifficulty) {
     let promotionDistanceWeight = 2;
     let freePathWeight = 0.7;
     let adjacentThreatWeight = -0.8;
@@ -768,7 +874,7 @@ function evaluateBoard2(game, aiDifficulty) {
 
     //Winning condition check
     const isFinishedResult = isFinished();
-    score += getIsFinishedWeight(isFinishedResult)
+    score += checkGameEnd(isFinishedResult)
 
     for (let col = 0; col < 8; col++) {
         for (let row = 0; row < 8; row++) {
@@ -923,9 +1029,9 @@ function getAdjacentThreatPenalty(piece, board) {
     return adjacentThreatPenalty;
 }
 
-function getIsFinishedWeight(isFinishedResult, path) {
+function checkGameEnd(isFinishedResult, path) {
     if (!isFinishedResult) {
-        return 0;
+        return null;
     }
 
     let score = 0;
@@ -934,15 +1040,17 @@ function getIsFinishedWeight(isFinishedResult, path) {
         if (path) {
             score += 100 - path.length;
         }
+        return score
     }
     if (isFinishedResult.includes('b')) {
         score = -100000;
         if (path) {
             score -= 100 - path.length;
         }
+        return score
     }
 
-    return score;
+    return null;
 }
 
 function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {

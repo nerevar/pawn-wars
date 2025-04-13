@@ -166,12 +166,12 @@ function getPawnsSlow(color = null) {
 }
 
 module.exports = {
-    'isFinished': isFinished,
-    'getMoves': getMoves,
-    'initializeGame': initializeGame,
-    'drawGame': drawGame,
-    'sleep': sleep,
-    'extractMovesFromPGN': extractMovesFromPGN,
-    'getPawns': getPawns,
-    'drawBoard': drawBoard,
+    isFinished,
+    getMoves,
+    initializeGame,
+    drawGame,
+    sleep,
+    extractMovesFromPGN,
+    getPawns,
+    drawBoard,
 }

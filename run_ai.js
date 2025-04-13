@@ -11,6 +11,10 @@ globalThis.getPawns = getPawns;
 globalThis.drawBoard = drawBoard;
 globalThis.extractMovesFromPGN = extractMovesFromPGN;
 
+const { EVALUATION_FACTORS } = require('./factors.js');
+globalThis.EVALUATION_FACTORS = EVALUATION_FACTORS;
+
+
 const { run_game, debug } = require('./ai.js');
 globalThis.debug = debug;
 
@@ -84,9 +88,9 @@ function zScore(p) {
 
 // run_game(1, 3, 3, true)
 
-const N = 1000;
-const ai1 = 9;
-const ai2 = 2;
+const N = 100;
+const ai1 = 5;
+const ai2 = 5;
 
 console.log(`start ${N} games between ai ${ai1} and ai ${ai2}`)
 

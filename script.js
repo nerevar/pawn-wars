@@ -253,7 +253,7 @@ $('#movesBtn').on('click', function () {
 
         moveScores.forEach((moveData, index) => {
             const $square = $('#board .square-' + moveData.move.to);
-            $square.prepend(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score}</div>`);
+            $square.prepend(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score.toFixed(2)}</div>`);
         });
 
         // координаты клеток
