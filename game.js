@@ -5,7 +5,6 @@ function sleep(ms) {
 
 function drawGame() {
     return game.ascii().replaceAll('p', '♟').replaceAll('P', '♗').replaceAll('q', '♛').replaceAll('Q', '♕')
-    // return game.ascii().replaceAll('p', 'B').replaceAll('P', 'W')
 }
 
 function drawBoard(moveFrom) {
