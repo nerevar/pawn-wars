@@ -196,9 +196,12 @@ function loadGameFromURL() {
     const moves = urlParams.get('moves');
 
     gameMode = urlParams.get('gameMode') || 'playerw';
-    aiDifficulty = parseInt(urlParams.get('aiDifficulty')) || 1; // Default to Easy
+    const currentAiDifficulty = parseInt(urlParams.get('aiDifficulty')); // Default to Easy
 
-    $('#difficulty-select').val(aiDifficulty); // Set difficulty select
+    if (currentAiDifficulty) {
+        aiDifficulty = currentAiDifficulty;
+        $('#difficulty-select').val(aiDifficulty); // Set difficulty select
+    }
     aiColor = (gameMode === 'playerw') ? 'b' : ((gameMode === 'playerb') ? 'w' : null);
 
     fen = initializeGame(moves);

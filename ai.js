@@ -8,7 +8,17 @@ var debug = {
 function findBestMove(aiDifficulty, getAllMoves=false) {
     debug.log = {}; // Сброс лога
     debug.tree = {};
-    debug.config.depth = 3 + 1; // Сохраняем глубину поиска
+
+    if (aiDifficulty == 1) {
+        debug.config.depth = 3
+    } else if (aiDifficulty == 2) {
+        debug.config.depth = 4
+    } else if (aiDifficulty == 3) {
+        debug.config.depth = 5
+    } else {
+        debug.config.depth = 4;
+    }
+
     return minimax(
         debug.config.depth,
         game.turn() == 'w',
@@ -84,6 +94,9 @@ function minimax(
 
         game.move(move.san);
         const data = minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, childCtx);
+        if (data === null) {
+            minimax(depth - 1, !isMaximizing, aiDifficulty, alpha, beta, childCtx);
+        }
         const score = data.score;
         if (ENABLE_LOGGING) {
             const childEval = data.evaluation;
@@ -136,7 +149,7 @@ function minimax(
 }
 
 function evaluateBoard3(aiDifficulty, nodeId, path) {
-    if (aiDifficulty == 1) {
+    if (aiDifficulty == 0) {
         // Запись компонентов в лог
         ENABLE_LOGGING && (debug.log[nodeId].components = {
             white: {},
@@ -148,8 +161,16 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
         return 0;
     }
 
+    if (aiDifficulty >= 1 && aiDifficulty <= 3) {
+        const score = evaluateBoardMedium();
+        ENABLE_LOGGING && (debug.log[nodeId].components = {
+            total: score,
+        });
+        return score
+    }
+
     let finishedScore = 0;
-    if (aiDifficulty >= 2) {
+    if (aiDifficulty >= 4) {
         // Winning condition check
         // console.log(debug.log[nodeId])
         finishedScore = getIsFinishedWeight(isFinished(), path)
@@ -168,40 +189,35 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
 
     let whitePawnAdvancement = 0;
     let blackPawnAdvancement = 0;
-    if (aiDifficulty >= 3) {
+    if (aiDifficulty >= 5) {
         whitePawnAdvancement = evaluatePawnAdvancement('w')
         blackPawnAdvancement = evaluatePawnAdvancement('b')
     }
-    // if (aiDifficulty == 42) {
-    //     whitePawnAdvancement = evaluatePawnAdvancement2('w')
-    //     blackPawnAdvancement = evaluatePawnAdvancement2('b')
-    // }
-
 
     let whitePawnCount = 0;
     let blackPawnCount = 0;
-    if (aiDifficulty >= 4) {
+    if (aiDifficulty >= 6) {
         whitePawnCount = evaluatePawnCount('w')
         blackPawnCount = evaluatePawnCount('b')
     }
 
     let whiteCaptureOpportunities = 0;
     let blackCaptureOpportunities = 0;
-    if (aiDifficulty >= 5) {
+    if (aiDifficulty >= 7) {
         whiteCaptureOpportunities += evaluateCaptureOpportunities('w')
         blackCaptureOpportunities += evaluateCaptureOpportunities('b')
     }
 
     let whiteFreePath = 0;
     let blackFreePath = 0;
-    if (aiDifficulty == 6) {
+    if (aiDifficulty >= 8) {
         whiteFreePath += evaluateFreePath('w')
         blackFreePath += evaluateFreePath('b')
     }
 
     let whiteMajority = 0;
     let blackMajority = 0;
-    if (aiDifficulty == 7) {
+    if (aiDifficulty >= 9) {
         whiteMajority += evaluateMajority('w')
         blackMajority += evaluateMajority('b')
     }
@@ -244,8 +260,6 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
 
 function makeAiMove(aiDifficulty) {
     if (isFinished()) return;
-
-    if (!aiDifficulty) aiDifficulty = 2;
 
     var possibleMoves = getMoves();
     if (possibleMoves.length === 0) return;
@@ -484,12 +498,6 @@ function evaluateMajority(color) {
 }
 
 
-
-
-
-
-
-
 function evaluatePawnAdvancement(color) {
     // бонус за расстояние до финиша
     let score = 0;
@@ -497,7 +505,7 @@ function evaluatePawnAdvancement(color) {
     getPawns(color).forEach(pawn => {
         const distance = Math.abs(pawn.row - promotionRow);
         switch (distance) {
-            case 0: score += Infinity;  // победа
+            case 0: score += 10000;  // победа
             case 1: score += 1000;  // предпоследний ряд - почти победа
             case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
             default: score += (7 - distance) * 10; // бонус за расстояние для остальных клеток
@@ -506,21 +514,6 @@ function evaluatePawnAdvancement(color) {
     return score;
 }
 
-function evaluatePawnAdvancement2(color) {
-    // бонус за расстояние до финиша
-    let score = 0;
-    const promotionRow = color === 'w' ? 7 : 0;
-    getPawns(color).forEach(pawn => {
-        const distance = Math.abs(pawn.row - promotionRow);
-        switch (distance) {
-            case 0: score += Infinity;  // победа
-            case 1: score += 1000;  // предпоследний ряд - почти победа
-            case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
-            default: score += (7 - distance) * 5; // бонус за расстояние для остальных клеток
-        }
-    });
-    return score;
-}
 
 // 2. Новые аспекты: подсчет пешек и оценка разменов
 function evaluatePawnCount(color) {
@@ -615,20 +608,18 @@ function evaluateFreePath(color) {
 }
 
 
-function evaluateBoard(game, aiDifficulty) {
+function evaluateBoardMedium() {
     let score = 0;
     const board = game.board();
-    const turn = game.turn(); // 'w' or 'b'
-    const possibleMoves = getMoves();
 
-    // If no moves are available, penalize it, unless its win
-    if (possibleMoves.length === 0 && !isFinished()) {
-        if (turn === 'b') {
-            return -5000; // This is the ai. It will try to avoid this scenario
-        } else {
-            return 5000
-        }
-    }
+    // // If no moves are available, penalize it, unless its win
+    // if (possibleMoves.length === 0 && !isFinished()) {
+    //     if (turn === 'b') {
+    //         return -5000; // This is the ai. It will try to avoid this scenario
+    //     } else {
+    //         return 5000
+    //     }
+    // }
 
     //Winning condition check
     const isFinishedResult = getIsFinishedWeight(isFinished())
@@ -745,13 +736,15 @@ function evaluateBoard(game, aiDifficulty) {
                     nextMoveFree * 2
 
                 if (piece.color === 'b') {
-                    score += pieceScore;
-                } else {
                     score -= pieceScore;
+                } else {
+                    score += pieceScore;
                 }
             }
         }
     }
+
+    // console.log(`evaluate MEDIUM score: ${score}`)
 
     return score;
 }
@@ -938,11 +931,15 @@ function getIsFinishedWeight(isFinishedResult, path) {
     let score = 0;
     if (isFinishedResult.includes('w')) {
         score = +100000;
-        score += 100 - path?.length;
+        if (path) {
+            score += 100 - path.length;
+        }
     }
     if (isFinishedResult.includes('b')) {
         score = -100000;
-        score -= 100 - path?.length;
+        if (path) {
+            score -= 100 - path.length;
+        }
     }
 
     return score;

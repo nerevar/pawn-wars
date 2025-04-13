@@ -84,11 +84,11 @@ function zScore(p) {
 
 // run_game(1, 3, 3, true)
 
-const N = 100;
-const ai1 = 7;
-const ai2 = 6;
+const N = 1000;
+const ai1 = 9;
+const ai2 = 2;
 
-console.log(`start ${N} games`)
+console.log(`start ${N} games between ai ${ai1} and ai ${ai2}`)
 
 var t1 = performance.now()
 const result = runComparison(ai1, ai2, N);
