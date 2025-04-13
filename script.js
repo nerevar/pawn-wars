@@ -273,19 +273,18 @@ $('#movesBtn').on('click', function () {
 $(document).ready(function () {
     pageLoadTime = Date.now();
 
-    // TODO: uncomment
     // Get IP Info
-    // $.ajax({
-    //     url: 'https://ipinfo.io?token=' + atob(ipInfoToken),  // free account, 50k requests per month
-    //     dataType: 'jsonp',
-    //     success: function (data) {
-    //         ipInfo = data;
-    //         console.log('IP Info:', data);
-    //     },
-    //     error: function (error) {
-    //         console.error('Error getting IP info:', error);
-    //     }
-    // });
+    $.ajax({
+        url: 'https://ipinfo.io?token=' + atob(ipInfoToken),  // free account, 50k requests per month
+        dataType: 'jsonp',
+        success: function (data) {
+            ipInfo = data;
+            console.log('IP Info:', data);
+        },
+        error: function (error) {
+            console.error('Error getting IP info:', error);
+        }
+    });
 
     $("#startWhiteAiBtn").on("click", function () {
         gameMode = "playerw";

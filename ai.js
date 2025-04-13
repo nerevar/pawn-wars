@@ -164,7 +164,7 @@ function evaluateBoard(config, nodeId, path) {
     }
 
     if (config?.aiDifficulty >= 1 && config?.aiDifficulty <= 3) {
-        const score = evaluateBoardMedium();
+        const score = evaluateBoardMedium(path);
         ENABLE_LOGGING && logNodeFactors(nodeId, {'medium': 1}, {'medium': 1}, 0, score);
         return score
     }
@@ -268,7 +268,7 @@ function evaluateBoard3(aiDifficulty, nodeId, path) {
     }
 
     if (aiDifficulty >= 1 && aiDifficulty <= 3) {
-        const score = evaluateBoardMedium();
+        const score = evaluateBoardMedium(path);
         ENABLE_LOGGING && (debug.log[nodeId].components = {
             total: score,
         });
@@ -714,7 +714,7 @@ function evaluateFreePath(color) {
 }
 
 
-function evaluateBoardMedium() {
+function evaluateBoardMedium(path) {
     let score = 0;
     const board = game.board();
 
@@ -728,7 +728,7 @@ function evaluateBoardMedium() {
     // }
 
     //Winning condition check
-    const isFinishedResult = checkGameEnd(isFinished())
+    const isFinishedResult = checkGameEnd(isFinished(), path)
     if (isFinishedResult !== null) {
         return isFinishedResult;
     }
