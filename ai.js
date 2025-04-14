@@ -12,13 +12,6 @@ function findBestMove(aiDifficulty, getAllMoves=false) {
         aiDifficulty: aiDifficulty,
     };
 
-    // TODO: задать конфиг
-    if (aiDifficulty == 5) {
-        debug.config.factors = [
-            { id: 'pawnAdvancement', weight: 1.0 }
-        ]
-    }
-
     if (aiDifficulty == 1) {
         debug.config.depth = 3
     } else if (aiDifficulty == 2) {
@@ -27,6 +20,58 @@ function findBestMove(aiDifficulty, getAllMoves=false) {
         debug.config.depth = 5
     } else {
         debug.config.depth = 4;
+    }
+
+    // TODO: задать конфиг
+    if (aiDifficulty == 5) {
+        debug.config.factors = [
+            { id: 'pawnAdvancement', weight: 1.0 }
+        ]
+    }
+
+    if (aiDifficulty == 6) {
+        debug.config.factors = [
+            { id: 'mediumPawnAdvancement', weight: 2.0 },    // (8 - promotionDistance)
+            { id: 'mediumCenterColumnBonus', weight: 0.2 },  // Count of central pawns
+            { id: 'mediumNextMoveSafety', weight: 2.0 },     // Count of pawns with safe next move
+            { id: 'mediumFreePath', weight: 0.7 },          // Count of pawns with free path
+            { id: 'mediumAdjacentThreat', weight: -0.8 },     // Count of adjacent threats against us
+        ]
+    }
+
+    if (aiDifficulty == 7) {
+        const superSmartAiConfig = {
+            factors: [
+                // Основа
+                { id: 'pawnCount', weight: 1.0 },
+
+                // Главная цель - Прорыв
+                { id: 'pawnAdvancementAdvanced', weight: 1.0 }, // Базовое продвижение
+                { id: 'passedPawnsPhaseAdaptive', weight: 2.0 }, // Проходные - ключ к победе, особенно в эндшпиле
+                { id: 'promotionRace', weight: 1.5 }, // Прямое сравнение гонки
+
+                // Вторая цель - Блокада и структура
+                { id: 'blockedPawns', weight: -1.2 }, // Штраф за свои блокированные (можно сделать адаптивным)
+                { id: 'opponentBlockedPawns', weight: 0.7 },  // Бонус за блок врага
+                { id: 'pawnIslands', weight: -0.4 }, // Штраф за плохую структуру
+                { id: 'isolatedPawns', weight: -0.6 }, // Штраф за изолированные (обычно слабее)
+                { id: 'connectedPawns', weight: 0.4 },  // Бонус за связанные
+
+                // Активность и контроль
+                { id: 'mobility', weight: 0.2 },  // Базовая мобильность
+                { id: 'opponentRestriction', weight: 0.3 },  // Ограничение ходов врага
+                { id: 'keySquareControl', weight: 0.6 },  // Контроль важных полей
+
+                // Безопасность и тактика
+                { id: 'threatenedPawns', weight: -1.8 }, // Сильный штраф за атаки
+                { id: 'potentialCaptures', weight: 0.3 },  // Небольшой учет взятий (поиск важнее)
+
+                // Дополнительные стратегические факторы
+                { id: 'pawnMajority', weight: 0.5 }, // Потенциал на эндшпиль
+                { id: 'openingTempo', weight: 0.1 }, // Небольшой дебютный бонус
+            ]
+        };
+        debug.config.factors = superSmartAiConfig.factors;
     }
 
     return minimax(
@@ -213,6 +258,10 @@ function evaluateBoard(config, nodeId, path) {
         const weightedWhiteScore = whiteFactorScore * factorConfig.weight;
         const weightedBlackScore = blackFactorScore * factorConfig.weight;
 
+        if (isNaN(weightedWhiteScore)) {
+            console.error('isNan', factorDefinition)
+        }
+
         // Суммируем
         totalWhiteScore += weightedWhiteScore;
         totalBlackScore += weightedBlackScore;
@@ -226,6 +275,10 @@ function evaluateBoard(config, nodeId, path) {
 
     // 3. Финальный счет (Белые - Черные)
     const finalScore = totalWhiteScore - totalBlackScore;
+
+    if (isNaN(finalScore)) {
+        // console.error('NaN', config, whiteComponents, blackComponents)
+    }
 
     // 4. Логирование
     ENABLE_LOGGING && logNodeFactors(nodeId, whiteComponents, blackComponents, 0, finalScore);
@@ -717,15 +770,6 @@ function evaluateFreePath(color) {
 function evaluateBoardMedium(path) {
     let score = 0;
     const board = game.board();
-
-    // // If no moves are available, penalize it, unless its win
-    // if (possibleMoves.length === 0 && !isFinished()) {
-    //     if (turn === 'b') {
-    //         return -5000; // This is the ai. It will try to avoid this scenario
-    //     } else {
-    //         return 5000
-    //     }
-    // }
 
     //Winning condition check
     const isFinishedResult = checkGameEnd(isFinished(), path)

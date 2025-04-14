@@ -86,11 +86,11 @@ function zScore(p) {
     return t - (a[0] + a[1] * t + a[2] * t * t) / (1 + b[0] * t + b[1] * t * t + b[2] * t * t * t);
 }
 
-// run_game(1, 3, 3, true)
-
-const N = 100;
-const ai1 = 5;
-const ai2 = 5;
+const {
+    N = 100,
+    ai1 = 6,
+    ai2 = 2
+} = parseCliArguments();
 
 console.log(`start ${N} games between ai ${ai1} and ai ${ai2}`)
 
@@ -123,3 +123,49 @@ p-value: ${result.pValue}
 * 3 - evaluatePawnAdvancement — бонус за расстояние до финиша
 * evaluatePassedPawns - свободный проход - нет улучшения
 */
+
+/**
+ * Обрабатывает аргументы командной строки для скрипта сравнения AI.
+ * Ожидает три числовых аргумента: N (количество игр), ai1 (уровень/ID первого AI), ai2 (уровень/ID второго AI).
+ *
+ * @throws {Error} Если количество аргументов неверное.
+ * @throws {Error} Если аргументы не являются целыми числами.
+ * @throws {Error} Если N не является положительным числом.
+ * @returns {{N: number, ai1: number, ai2: number}} Объект с распарсенными значениями.
+ */
+function parseCliArguments() {
+    // process.argv[0]: node executable
+    // process.argv[1]: script path
+    // process.argv[2...]: user arguments
+    const args = process.argv.slice(2);
+    const EXPECTED_ARGS_COUNT = 3;
+
+    // 1. Проверка количества аргументов
+    if (args.length !== EXPECTED_ARGS_COUNT) {
+        return {}
+    }
+
+    const [nStr, ai1Str, ai2Str] = args;
+
+    // 2. Попытка парсинга в целые числа
+    const N = parseInt(nStr, 10);
+    const ai1 = parseInt(ai1Str, 10);
+    const ai2 = parseInt(ai2Str, 10);
+
+    // 3. Проверка на NaN (ошибка парсинга)
+    if (isNaN(N) || isNaN(ai1) || isNaN(ai2)) {
+        throw new Error(
+            `Invalid argument types. <N>, <ai1>, <ai2> must be integers.\nReceived: N='${nStr}', ai1='${ai1Str}', ai2='${ai2Str}'`
+        );
+    }
+
+    // 4. Дополнительная валидация (N должно быть > 0)
+    if (N <= 0) {
+        throw new Error(
+            `Invalid value for N. Number of games (N) must be positive. Received: ${N}`
+        );
+    }
+
+    // 5. Возвращаем результат
+    return { N, ai1, ai2 };
+}
