@@ -4,6 +4,10 @@ const EVALUATION_FACTORS = {
         evaluate: evaluatePawnCount,
         defaultParams: {
             pawnValue: 100
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10],
+        iterateParams: {
+            pawnValue: [1, 10, 50, 100, 200]
         }
     },
     pawnAdvancement: {
@@ -13,28 +17,41 @@ const EVALUATION_FACTORS = {
             nearPromotionBonus: 1000,
             almostNearPromotionBonus: 100,
             enemySideBonus: 50,
-            rankBonusMultiplier: 10
+            rankDistanceBonus: 10
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10],
+        iterateParams: {
+            nearPromotionBonus: [100, 500, 1000, 2000],
+            almostNearPromotionBonus: [50, 100, 200, 500],
+            enemySideBonus: [10, 20, 30, 50, 80, 100],
+            rankDistanceBonus: [1, 5, 10, 20, 50]
         }
+
     },
     mediumPawnAdvancement: {
         id: 'mediumPawnAdvancement',
         evaluate: evaluateMediumPawnAdvancement,
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 20, 50],
     },
     mediumCenterColumnBonus: {
         id: 'mediumCenterColumnBonus',
         evaluate: evaluateMediumCenterColumnBonus,
+        weights: [0, 0.1, 0.2, 0.5, 1, 1.5, 2, 5, 10],
     },
     mediumNextMoveSafety: {
         id: 'mediumNextMoveSafety',
         evaluate: evaluateMediumNextMoveSafety,
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 20, 50],
     },
     mediumFreePath: {
         id: 'mediumFreePath',
         evaluate: evaluateMediumFreePath,
+        weights: [0, 0.1, 0.2, 0.5, 0.7, 1, 1.5, 2, 5, 10],
     },
     mediumAdjacentThreat: {
         id: 'mediumAdjacentThreat',
         evaluate: evaluateMediumAdjacentThreat,
+        weights: [0, -5, -2, -1.5, -1, -0.8, -0.5, -0.2, -0.1],
     },
 
     // --- Новые продвинутые факторы ---
@@ -45,8 +62,15 @@ const EVALUATION_FACTORS = {
             baseScore: 10,
             rankMultiplier: 5,
             nearGoalBonus: 100,
-            veryNearGoalBonus: 500
-        }
+            veryNearGoalBonus: 500,
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10],
+        iterateParams: {
+            baseScore: [0, 1, 5, 10, 20, 50],
+            rankMultiplier: [0, 1, 2, 5, 10],
+            nearGoalBonus: [0, 10, 20, 50, 75, 100, 150, 200],
+            veryNearGoalBonus: [100, 200, 500, 750, 1000],
+        },
     },
     passedPawns: {
         id: 'passedPawns',
@@ -54,42 +78,90 @@ const EVALUATION_FACTORS = {
         defaultParams: {
             passedPawnBaseBonus: 200,
             passedPawnRankMultiplier: 50,
-            nearGoalPassedBonus: 150 // Добавленный параметр
-        }
+            nearGoalPassedBonus: 150,
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10],
+        iterateParams: {
+            passedPawnBaseBonus: [0, 10, 20, 50, 100, 150, 200, 250, 300, 500],
+            passedPawnRankMultiplier: [10, 20, 50, 100],
+            nearGoalPassedBonus: [100, 150, 200, 250, 500, 750, 1000],
+        },
     },
     passedPawnsPhaseAdaptive: {
         id: 'passedPawnsPhaseAdaptive',
         evaluate: evaluatePassedPawnsPhaseAdaptive, // Используем новую функцию
         defaultParams: {
-            passedPawnBaseBonus: 200, passedPawnRankMultiplier: 50, nearGoalPassedBonus: 150,
-            enablePhaseAdjustment: true, endgameMultiplier: 2.0, middlegameMultiplier: 1.2,
-            endgameThreshold: 8, middlegameThreshold: 12
-        }
+            passedPawnBaseBonus: 200,
+            passedPawnRankMultiplier: 50,
+            nearGoalPassedBonus: 150,
+            enablePhaseAdjustment: 1,
+            endgameMultiplier: 2.0,
+            middlegameMultiplier: 1.2,
+            endgameThreshold: 8,
+            middlegameThreshold: 12
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10],
+        iterateParams: {
+            passedPawnBaseBonus: [100, 150, 200, 250, 500, 750, 1000],
+            passedPawnRankMultiplier: [0, 10, 20, 50, 75, 100, 150],
+            nearGoalPassedBonus: [0, 10, 20, 50, 100, 150, 200, 250, 300, 500],
+            enablePhaseAdjustment: [0, 1],
+            endgameMultiplier: [0, 0.5, 1, 1.5, 2, 5, 10],
+            middlegameMultiplier: [0, 0.5, 1, 1.5, 2, 5, 10],
+            endgameThreshold: [0, 1, 5, 10, 15, 20, 50],
+            middlegameThreshold: [0, 1, 5, 10, 15, 20, 50]
+        },
     },
     blockedPawns: {
         id: 'blockedPawns',
         evaluate: evaluateBlockedPawns,
-        defaultParams: { blockedPenalty: 50 } // Положительное значение, вес будет < 0
+        defaultParams: {
+            blockedPenalty: 50 // Положительное значение, вес будет < 0
+        },
+        weights: [0, 1, -0.5, -1, -1.5, -2, -5, -10],
+        iterateParams: {
+            blockedPenalty: [0, 10, 20, 30, 50, 75, 100, 150, 200]
+        }
     },
     opponentBlockedPawns: {
         id: 'opponentBlockedPawns',
         evaluate: evaluateOpponentBlockedPawns,
-        defaultParams: { opponentBlockedBonus: 40 }
+        defaultParams: {
+            opponentBlockedBonus: 40
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10],
+        iterateParams: {
+            opponentBlockedBonus: [0, 10, 20, 30, 50, 75, 100, 150, 200]
+        }
     },
     mobility: {
         id: 'mobility',
         evaluate: evaluateMobility,
-        defaultParams: { moveBonus: 2 }
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
     },
     opponentRestriction: {
         id: 'opponentRestriction',
         evaluate: evaluateOpponentRestriction,
-        defaultParams: { attackedSquareBonus: 1, attackedNearOpponentBonus: 5 }
+        defaultParams: {
+            attackedSquareBonus: 1,
+            attackedNearOpponentBonus: 5
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            attackedSquareBonus: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+            attackedNearOpponentBonus: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20]
+        }
     },
     connectedPawns: {
         id: 'connectedPawns',
         evaluate: evaluateConnectedPawns,
-        defaultParams: { connectedPawnBonus: 15 }
+        defaultParams: {
+            connectedPawnBonus: 15
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            connectedPawnBonus: [0, 10, 20, 30, 50, 75, 100]
+        }
     },
     openingTempo: {
         id: 'openingTempo',
@@ -98,6 +170,12 @@ const EVALUATION_FACTORS = {
             doubleMoveBonus: 5,
             centerDoubleMoveBonus: 8,
             maxEffectiveMoveNumber: 5
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            doubleMoveBonus: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+            centerDoubleMoveBonus: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+            maxEffectiveMoveNumber: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20]
         }
     },
     threatenedPawns: {
@@ -106,6 +184,11 @@ const EVALUATION_FACTORS = {
         defaultParams: {
             threatenedPenalty: 40,             // Положительное значение, вес будет < 0
             threatenedAdvancedPenalty: 60      // Положительное значение, вес будет < 0
+        },
+        weights: [0, 1, -0.5, -1, -1.5, -2, -5, -10],
+        iterateParams: {
+            threatenedPenalty: [0, 10, 20, 30, 50, 75, 100],
+            threatenedAdvancedPenalty: [0, 10, 20, 30, 50, 75, 100]
         }
     },
     potentialCaptures: {
@@ -114,6 +197,11 @@ const EVALUATION_FACTORS = {
         defaultParams: {
             captureBaseValue: 100,
             captureRankMultiplier: 20
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            captureBaseValue: [1, 5, 10, 20, 30, 50, 75, 100, 150, 200],
+            captureRankMultiplier: [0, 10, 15, 20, 25, 30, 50],
         }
     },
 
@@ -121,27 +209,65 @@ const EVALUATION_FACTORS = {
     pawnIslands: {
         id: 'pawnIslands',
         evaluate: evaluatePawnIslands,
-        defaultParams: { islandPenalty: 10 } // Положительное, вес < 0
+        defaultParams: {
+            islandPenalty: 10  // Положительное, вес < 0
+        },
+        weights: [0, 1, -0.5, -1, -1.5, -2, -5, -10],
+        iterateParams: {
+            islandPenalty: [0, 1, 5, 10, 20, 30]
+        }
     },
     isolatedPawns: {
         id: 'isolatedPawns',
         evaluate: evaluateIsolatedPawns,
-        defaultParams: { isolatedPawnPenalty: 15, isolatedAdvancedPenalty: 10 } // Положительное, вес < 0
+        defaultParams: {
+            isolatedPawnPenalty: 15, // Положительное, вес < 0
+            isolatedAdvancedPenalty: 10
+        },
+        weights: [0, 1, -0.5, -1, -1.5, -2, -5, -10],
+        iterateParams: {
+            isolatedPawnPenalty: [0, 1, 5, 10, 15, 20, 30],
+            isolatedAdvancedPenalty: [0, 1, 5, 10, 15, 20, 30]
+        }
     },
     keySquareControl: {
         id: 'keySquareControl',
         evaluate: evaluateKeySquareControl,
-        defaultParams: { controlOpponentFrontBonus: 4, controlPromotionApproachBonus: 8 }
+        defaultParams: {
+            controlOpponentFrontBonus: 4,
+            controlPromotionApproachBonus: 8
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            controlOpponentFrontBonus: [0, 1, 2, 4, 5, 7.5, 10],
+            controlPromotionApproachBonus: [0, 1, 2, 4, 5, 7.5, 10],
+        }
     },
     promotionRace: {
         id: 'promotionRace',
         evaluate: evaluatePromotionRace,
-        defaultParams: { raceWinBonus: 300, raceAdvantageMultiplier: 50 }
+        defaultParams: {
+            raceWinBonus: 300,
+            raceAdvantageMultiplier: 50
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            raceWinBonus: [0, 10, 20, 50, 100, 150, 200, 300, 400, 500, 750, 1000],
+            raceAdvantageMultiplier: [1, 2, 4, 5, 10, 15, 20, 30, 40, 50]
+        }
     },
     pawnMajority: {
         id: 'pawnMajority',
         evaluate: evaluatePawnMajority,
-        defaultParams: { majorityBonus: 20, centerWeight: 0.5 }
+        defaultParams: {
+            majorityBonus: 20,
+            centerWeight: 0.5
+        },
+        weights: [0, 0.5, 1, 1.5, 2, 5, 10, 15, 20],
+        iterateParams: {
+            majorityBonus: [0, 10, 20, 30, 50, 75, 100],
+            centerWeight: [0.1, 0.2, 0.5, 0.75, 1, 1.5, 2]
+        }
     },
 }
 
@@ -417,7 +543,8 @@ function evaluatePawnAdvancementAdvanced(color, params = {}) {
 function evaluatePassedPawns(color, params = {}) {
     const {
         passedPawnBaseBonus = 200,        // Базовый бонус за статус проходной
-        passedPawnRankMultiplier = 50    // Доп. бонус за каждую пройденную горизонталь проходной пешки
+        passedPawnRankMultiplier = 50,    // Доп. бонус за каждую пройденную горизонталь проходной пешки
+        nearGoalPassedBonus = 150,
     } = params;
 
     let score = 0;
@@ -469,7 +596,7 @@ function evaluatePassedPawnsPhaseAdaptive(color, params = {}) {
         passedPawnRankMultiplier = 50,
         nearGoalPassedBonus = 150,
         // Параметры для адаптации
-        enablePhaseAdjustment = true, // Включить адаптацию?
+        enablePhaseAdjustment = 1, // Включить адаптацию?
         endgameMultiplier = 2.0,    // Насколько умножить бонус в эндшпиле
         middlegameMultiplier = 1.2, // Насколько умножить бонус в миттельшпиле
         endgameThreshold = 8,       // Меньше или равно стольки пешек = эндшпиль
@@ -663,7 +790,6 @@ function evaluateAdvancedBlockades(color, params = {}) {
  * Гиперпараметры: moveBonus
  */
 function evaluateMobility(color, params = {}) {
-    const { moveBonus = 2 } = params;
     let legalMovesCount = 0;
     const pawns = getPawns(color);
     const board = game.board();
@@ -706,7 +832,7 @@ function evaluateMobility(color, params = {}) {
         // Если игра не поддерживает En Passant, этот пункт пропускаем.
     });
 
-    return legalMovesCount * moveBonus;
+    return legalMovesCount;
 }
 
 /**
@@ -716,7 +842,10 @@ function evaluateMobility(color, params = {}) {
  * Гиперпараметры: attackedSquareBonus, attackedNearOpponentBonus
  */
 function evaluateOpponentRestriction(color, params = {}) {
-    const { attackedSquareBonus = 1, attackedNearOpponentBonus = 5 } = params;
+    const {
+        attackedSquareBonus = 1,
+        attackedNearOpponentBonus = 5
+    } = params;
 
     let restrictionScore = 0;
     const myPawns = getPawns(color);
@@ -792,9 +921,9 @@ function evaluateConnectedPawns(color, params = {}) {
         }
 
         if (isProtected) {
-            score += connectedPawnBonus;
+            // score += connectedPawnBonus;
             // Можно добавить бонус в зависимости от ряда пешки (защищенная продвинутая пешка ценнее)
-            // score += connectedPawnBonus + Math.abs(pawn.row - (color === 'w' ? 6 : 1));
+            score += connectedPawnBonus + Math.abs(pawn.row - (color === 'w' ? 6 : 1));
         }
     });
     return score;
@@ -1101,7 +1230,10 @@ function evaluateIsolatedPawns(color, params = {}) {
  * Гиперпараметры: controlOpponentFrontBonus, controlPromotionApproachBonus
  */
 function evaluateKeySquareControl(color, params = {}) {
-    const { controlOpponentFrontBonus = 4, controlPromotionApproachBonus = 8 } = params;
+    const {
+        controlOpponentFrontBonus = 4,
+        controlPromotionApproachBonus = 8
+    } = params;
 
     let score = 0;
     const myPawns = getPawns(color);
@@ -1154,7 +1286,10 @@ function evaluateKeySquareControl(color, params = {}) {
  * Гиперпараметры: raceWinBonus, raceAdvantageMultiplier
  */
 function evaluatePromotionRace(color, params = {}) {
-    const { raceWinBonus = 300, raceAdvantageMultiplier = 50 } = params;
+    const {
+        raceWinBonus = 300,
+        raceAdvantageMultiplier = 50
+    } = params;
 
     const opponentColor = (color === 'w') ? 'b' : 'w';
     const board = game.board();
@@ -1221,7 +1356,6 @@ function evaluatePromotionRace(color, params = {}) {
     if (game.turn() === color && myBestDistance === 1 && myBestDistance < opponentBestDistance) {
         score *= 1.5; // Увеличиваем бонус, если наш ход и мы в шаге от победы в гонке
     }
-
 
     return score;
 }

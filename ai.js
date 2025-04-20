@@ -5,73 +5,82 @@ var debug = {
     config: {}
 };
 
-function findBestMove(aiDifficulty, getAllMoves=false) {
+function findBestMove(aiConfigLevel, getAllMoves=false) {
     debug.log = {};
     debug.tree = {};
-    debug.config = {
-        aiDifficulty: aiDifficulty,
-    };
 
-    if (aiDifficulty == 1) {
-        debug.config.depth = 3
-    } else if (aiDifficulty == 2) {
-        debug.config.depth = 4
-    } else if (aiDifficulty == 3) {
-        debug.config.depth = 5
+    if (typeof aiConfigLevel === 'object') {
+        debug.config = aiConfigLevel;
+        if (!debug.config.depth) {
+            debug.config.depth = 4
+        }
     } else {
-        debug.config.depth = 4;
-    }
-
-    // TODO: задать конфиг
-    if (aiDifficulty == 5) {
-        debug.config.factors = [
-            { id: 'pawnAdvancement', weight: 1.0 }
-        ]
-    }
-
-    if (aiDifficulty == 6) {
-        debug.config.factors = [
-            { id: 'mediumPawnAdvancement', weight: 2.0 },    // (8 - promotionDistance)
-            { id: 'mediumCenterColumnBonus', weight: 0.2 },  // Count of central pawns
-            { id: 'mediumNextMoveSafety', weight: 2.0 },     // Count of pawns with safe next move
-            { id: 'mediumFreePath', weight: 0.7 },          // Count of pawns with free path
-            { id: 'mediumAdjacentThreat', weight: -0.8 },     // Count of adjacent threats against us
-        ]
-    }
-
-    if (aiDifficulty == 7) {
-        const superSmartAiConfig = {
-            factors: [
-                // Основа
-                { id: 'pawnCount', weight: 1.0 },
-
-                // Главная цель - Прорыв
-                { id: 'pawnAdvancementAdvanced', weight: 1.0 }, // Базовое продвижение
-                { id: 'passedPawnsPhaseAdaptive', weight: 2.0 }, // Проходные - ключ к победе, особенно в эндшпиле
-                { id: 'promotionRace', weight: 1.5 }, // Прямое сравнение гонки
-
-                // Вторая цель - Блокада и структура
-                { id: 'blockedPawns', weight: -1.2 }, // Штраф за свои блокированные (можно сделать адаптивным)
-                { id: 'opponentBlockedPawns', weight: 0.7 },  // Бонус за блок врага
-                { id: 'pawnIslands', weight: -0.4 }, // Штраф за плохую структуру
-                { id: 'isolatedPawns', weight: -0.6 }, // Штраф за изолированные (обычно слабее)
-                { id: 'connectedPawns', weight: 0.4 },  // Бонус за связанные
-
-                // Активность и контроль
-                { id: 'mobility', weight: 0.2 },  // Базовая мобильность
-                { id: 'opponentRestriction', weight: 0.3 },  // Ограничение ходов врага
-                { id: 'keySquareControl', weight: 0.6 },  // Контроль важных полей
-
-                // Безопасность и тактика
-                { id: 'threatenedPawns', weight: -1.8 }, // Сильный штраф за атаки
-                { id: 'potentialCaptures', weight: 0.3 },  // Небольшой учет взятий (поиск важнее)
-
-                // Дополнительные стратегические факторы
-                { id: 'pawnMajority', weight: 0.5 }, // Потенциал на эндшпиль
-                { id: 'openingTempo', weight: 0.1 }, // Небольшой дебютный бонус
-            ]
+        debug.config = {
+            aiDifficulty: aiConfigLevel,
         };
-        debug.config.factors = superSmartAiConfig.factors;
+
+        if (aiConfigLevel == 1) {
+            debug.config.depth = 3
+        } else if (aiConfigLevel == 2) {
+            debug.config.depth = 4
+        } else if (aiConfigLevel == 3) {
+            debug.config.depth = 5
+        } else {
+            debug.config.depth = 4;
+        }
+
+        // TODO: задать конфиг
+        if (aiConfigLevel == 5) {
+            debug.config.factors = [
+                { id: 'pawnAdvancement', weight: 1.0 }
+            ]
+        }
+
+        if (aiConfigLevel == 6) {
+            // реализация Medium через отдельные факторы
+            debug.config.factors = [
+                { id: 'mediumPawnAdvancement', weight: 2.0 },    // (8 - promotionDistance)
+                { id: 'mediumCenterColumnBonus', weight: 0.2 },  // Count of central pawns
+                { id: 'mediumNextMoveSafety', weight: 2.0 },     // Count of pawns with safe next move
+                { id: 'mediumFreePath', weight: 0.7 },          // Count of pawns with free path
+                { id: 'mediumAdjacentThreat', weight: -0.8 },     // Count of adjacent threats against us
+            ]
+        }
+
+        if (aiConfigLevel == 7) {
+            const superSmartAiConfig = {
+                factors: [
+                    // Основа
+                    { id: 'pawnCount', weight: 1.0 },
+
+                    // Главная цель - Прорыв
+                    { id: 'pawnAdvancementAdvanced', weight: 1.0 }, // Базовое продвижение
+                    { id: 'passedPawnsPhaseAdaptive', weight: 2.0 }, // Проходные - ключ к победе, особенно в эндшпиле
+                    { id: 'promotionRace', weight: 1.5 }, // Прямое сравнение гонки
+
+                    // Вторая цель - Блокада и структура
+                    { id: 'blockedPawns', weight: -1.2 }, // Штраф за свои блокированные (можно сделать адаптивным)
+                    { id: 'opponentBlockedPawns', weight: 0.7 },  // Бонус за блок врага
+                    { id: 'pawnIslands', weight: -0.4 }, // Штраф за плохую структуру
+                    { id: 'isolatedPawns', weight: -0.6 }, // Штраф за изолированные (обычно слабее)
+                    { id: 'connectedPawns', weight: 0.4 },  // Бонус за связанные
+
+                    // Активность и контроль
+                    { id: 'mobility', weight: 0.2 },  // Базовая мобильность
+                    { id: 'opponentRestriction', weight: 0.3 },  // Ограничение ходов врага
+                    { id: 'keySquareControl', weight: 0.6 },  // Контроль важных полей
+
+                    // Безопасность и тактика
+                    { id: 'threatenedPawns', weight: -1.8 }, // Сильный штраф за атаки
+                    { id: 'potentialCaptures', weight: 0.3 },  // Небольшой учет взятий (поиск важнее)
+
+                    // Дополнительные стратегические факторы
+                    { id: 'pawnMajority', weight: 0.5 }, // Потенциал на эндшпиль
+                    { id: 'openingTempo', weight: 0.1 }, // Небольшой дебютный бонус
+                ]
+            };
+            debug.config.factors = superSmartAiConfig.factors;
+        }
     }
 
     return minimax(
@@ -237,6 +246,10 @@ function evaluateBoard(config, nodeId, path) {
 
     // 2. Итерация по факторам из конфигурации
     for (const factorConfig of config.factors) {
+        if (factorConfig.weight === 0) {
+            // не вычисляем фактор ради ускорения
+            continue;
+        }
         const factorDefinition = EVALUATION_FACTORS[factorConfig.id];
 
         if (!factorDefinition) {
@@ -443,10 +456,12 @@ function run_game(cnt, ai1, ai2) {
     let stats = []
     for (var i = 0; i < cnt; ++i) {
         initializeGame()
+        // console.log('start game', ai1, ai2)
         while (!isFinished()) {
             if (getMoves().length === 0) break;
             const currentAiLevel = game.turn() == 'w' ? ai1 : ai2;
             const { move } = findBestMove(currentAiLevel);
+            // console.log('run move', move)
             if (!move) break;
             game.move(move);
         }
@@ -455,15 +470,14 @@ function run_game(cnt, ai1, ai2) {
 
         // Отображение прогресса игр
         process.stdout.write('.')
-        if ((i + 1) % 10 === 0) {
-            process.stdout.write('\n');
-            // if ((i + 1) === cnt) {
-            //     process.stdout.write('\n'); // Переходим на новую строку, если все игры завершены
-            // }
-        }
+        // if ((i + 1) % 10 === 0) {
+        //     process.stdout.write('\n');
+        //     // if ((i + 1) === cnt) {
+        //     //     process.stdout.write('\n'); // Переходим на новую строку, если все игры завершены
+        //     // }
+        // }
         ENABLE_LOGGING && logGame(ai1, ai2, isFinished(), game);
     }
-    console.log('')
     return stats;
 }
 
@@ -1117,10 +1131,78 @@ function logGame(ai1, ai2, isFinished, game) {
     fs.appendFileSync('games.log', `${ai1};${ai2};${isFinished};${pgn}\n`);
 }
 
+
+function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
+    // console.log(`Running comparison between ${ai1} and ${ai2} for ${N} games with confidence level ${confidenceLevel}`)
+
+    // 1. Разделение игр между сторонами
+    const N1 = Math.floor(N / 2);
+    const N2 = N - N1;
+
+    // 2. Синхронный запуск игр
+    const resultsAI1White = run_game(N1, ai1, ai2);
+    const resultsAI2White = run_game(N2, ai2, ai1);
+
+    // 3. Подсчёт побед без промежуточного маппинга
+    const ai1Wins =
+        resultsAI1White.filter(res => res.includes('w')).length +
+        resultsAI2White.filter(res => res.includes('b')).length;
+
+    const ai2Wins = N - ai1Wins;
+    console.log(ai1Wins, ai2Wins)
+
+    // 4. Проверка минимального количества игр
+    // if (ai1Wins < 10 || ai2Wins < 10) {
+    //     console.warn('Минимальный порог в 10 побед не достигнут. Увеличьте N.');
+    // }
+
+    // 5. Z-тест для одной пропорции (H0: p = 0.5)
+    const p = ai1Wins / N;
+    const z = (p - 0.5) / Math.sqrt(0.25 / N);
+    const pVal = 2 * (1 - cumulativeStdNormal(Math.abs(z)));
+
+    // 6. Доверительный интервал
+    const zCrit = zScore(1 - (1 - confidenceLevel) / 2);
+    const margin = zCrit * Math.sqrt(p * (1 - p) / N);
+    const ci = [p - margin, p + margin];
+
+    return {
+        ai1: ai1Wins,
+        ai2: ai2Wins,
+        // winRate: (p * 100).toFixed(1) + '%',
+        // difference: ((p - 0.5) * 100).toFixed(1) + '%',
+        winRate: p,
+        difference: (p - 0.5) * 100,
+        confidenceInterval: ci.map(v => (v * 100).toFixed(1) + '%'),
+        pValue: pVal.toExponential(3),
+        significant: pVal < (1 - confidenceLevel)
+    };
+}
+
+// Вспомогательные математические функции
+function cumulativeStdNormal(z) {
+    // Аппроксимация CDF с точностью 1e-5
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989423 * Math.exp(-z * z / 2);
+    let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    return z > 0 ? 1 - prob : prob;
+}
+
+function zScore(p) {
+    // Аппроксимация обратной CDF для p > 0.5
+    if (p < 0.5) return -zScore(1 - p);
+    const a = [2.515517, 0.802853, 0.010328];
+    const b = [1.432788, 0.189269, 0.001308];
+    const t = Math.sqrt(-2 * Math.log(1 - p));
+    return t - (a[0] + a[1] * t + a[2] * t * t) / (1 + b[0] * t + b[1] * t * t + b[2] * t * t * t);
+}
+
+
 module.exports = {
     makeAiMove,
     run_game,
     findBestMove,
     evaluateBoard3,
     debug,
+    runComparison,
 }
