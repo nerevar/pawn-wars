@@ -90,16 +90,217 @@ function parseCliArguments() {
 
 // Запуск сравнений
 
-const {
-    N = 100,
+let {
+    N = 10,
     ai1 = 6,
     ai2 = 2
 } = parseCliArguments();
 
+ai2 = {
+    "mediumPawnAdvancement":
+    {
+        "id": "mediumPawnAdvancement",
+        "weight": 50,
+        "params":
+            {}
+    },
+    "mediumCenterColumnBonus":
+    {
+        "id": "mediumCenterColumnBonus",
+        "weight": 0.2,
+        "params":
+            {}
+    },
+    "mediumNextMoveSafety":
+    {
+        "id": "mediumNextMoveSafety",
+        "weight": 20,
+        "params":
+            {}
+    },
+    "mediumFreePath":
+    {
+        "id": "mediumFreePath",
+        "weight": 0.2,
+        "params":
+            {}
+    },
+    "mediumAdjacentThreat":
+    {
+        "id": "mediumAdjacentThreat",
+        "weight": -0.8,
+        "params":
+            {}
+    },
+    "pawnAdvancementAdvanced":
+    {
+        "id": "pawnAdvancementAdvanced",
+        "weight": 0.5,
+        "params":
+        {
+            "baseScore": 1,
+            "rankMultiplier": 5,
+            "nearGoalBonus": 20,
+            "veryNearGoalBonus": 100
+        }
+    },
+    "passedPawns":
+    {
+        "id": "passedPawns",
+        "weight": 2,
+        "params":
+        {
+            "passedPawnBaseBonus": 200,
+            "passedPawnRankMultiplier": 20,
+            "nearGoalPassedBonus": 500
+        }
+    },
+    "passedPawnsPhaseAdaptive":
+    {
+        "id": "passedPawnsPhaseAdaptive",
+        "weight": 5,
+        "params":
+        {
+            "passedPawnBaseBonus": 750,
+            "passedPawnRankMultiplier": 75,
+            "nearGoalPassedBonus": 300,
+            "enablePhaseAdjustment": 1,
+            "endgameMultiplier": 0.5,
+            "middlegameMultiplier": 1,
+            "endgameThreshold": 0,
+            "middlegameThreshold": 20
+        }
+    },
+    "blockedPawns":
+    {
+        "id": "blockedPawns",
+        "weight": -5,
+        "params":
+        {
+            "blockedPenalty": 150
+        }
+    },
+    "opponentBlockedPawns":
+    {
+        "id": "opponentBlockedPawns",
+        "weight": 10,
+        "params":
+        {
+            "opponentBlockedBonus": 10
+        }
+    },
+    "mobility":
+    {
+        "id": "mobility",
+        "weight": 15,
+        "params":
+            {}
+    },
+    "opponentRestriction":
+    {
+        "id": "opponentRestriction",
+        "weight": 1,
+        "params":
+        {
+            "attackedSquareBonus": 5,
+            "attackedNearOpponentBonus": 2
+        }
+    },
+    "connectedPawns":
+    {
+        "id": "connectedPawns",
+        "weight": 2,
+        "params":
+        {
+            "connectedPawnBonus": 75
+        }
+    },
+    "openingTempo":
+    {
+        "id": "openingTempo",
+        "weight": 15,
+        "params":
+        {
+            "doubleMoveBonus": 10,
+            "centerDoubleMoveBonus": 0,
+            "maxEffectiveMoveNumber": 5
+        }
+    },
+    "threatenedPawns":
+    {
+        "id": "threatenedPawns",
+        "weight": -1,
+        "params":
+        {
+            "threatenedPenalty": 100,
+            "threatenedAdvancedPenalty": 100
+        }
+    },
+    "potentialCaptures":
+    {
+        "id": "potentialCaptures",
+        "weight": 0.5,
+        "params":
+        {
+            "captureBaseValue": 1,
+            "captureRankMultiplier": 30
+        }
+    },
+    "pawnIslands":
+    {
+        "id": "pawnIslands",
+        "weight": -10,
+        "params":
+        {
+            "islandPenalty": 20
+        }
+    },
+    "isolatedPawns":
+    {
+        "id": "isolatedPawns",
+        "weight": -1,
+        "params":
+        {
+            "isolatedPawnPenalty": 5,
+            "isolatedAdvancedPenalty": 15
+        }
+    },
+    "keySquareControl":
+    {
+        "id": "keySquareControl",
+        "weight": 2,
+        "params":
+        {
+            "controlOpponentFrontBonus": 5,
+            "controlPromotionApproachBonus": 10
+        }
+    },
+    "promotionRace":
+    {
+        "id": "promotionRace",
+        "weight": 20,
+        "params":
+        {
+            "raceWinBonus": 150,
+            "raceAdvantageMultiplier": 4
+        }
+    },
+    "pawnMajority":
+    {
+        "id": "pawnMajority",
+        "weight": 1.5,
+        "params":
+        {
+            "majorityBonus": 100,
+            "centerWeight": 1
+        }
+    }
+}
+
 console.log(`start ${N} games between ai ${ai1} and ai ${ai2}`)
 
 var t1 = performance.now()
-const result = runComparison(ai1, ai2, N);
+const result = runComparison(ai1, { factors: Object.entries(ai2).map(x => x[1]) }, N);
 var t2 = performance.now();
 
 console.log(`Время выполнения: ${((t2 - t1) / 1000).toFixed(2)} сек
