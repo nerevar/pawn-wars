@@ -1,0 +1,650 @@
+[GridSearch] Starting Grid Search...
+[GridSearch] N per comparison: 50, Confidence Level: 0.95
+[GridSearch] Baseline Config: {"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Tuning Spec: {"factors":[{"id":"pawnAdvancement","weights":[0.8,1,1.2,1.5],"params":{"nearPromotionBonus":[800,1000,1200],"almostNearPromotionBonus":[80,100,120],"rankBonusMultiplier":[8,10,12]}},{"id":"pawnCount","weights":[0.9,1,1.1],"params":{"pawnValue":[90,100,110]}},{"id":"captureOpportunities","weights":[0.5,0.8,1]}]}
+[GridSearch] Log file: /Users/nerevar/work/projects/pawn-wars/pawn_battle_grid_search.log
+[GridSearch] Total combinations to test: 2916
+[GridSearch] Progress: 1/2916 (0.03%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.55, len1: 44, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":0.9,"params":{"pawnValue":90}},{"id":"captureOpportunities","weight":0.5,"params":{}}]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 44, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":0.9,"params":{"pawnValue":90}},{"id":"captureOpportunities","weight":0.8,"params":{}}]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 44, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":0.9,"params":{"pawnValue":90}},{"id":"captureOpportunities","weight":1,"params":{}}]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":0.9,"params":{"pawnValue":100}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 5/2916 (0.17%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":0.9,"params":{"pawnValue":110}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":1,"params":{"pawnValue":90}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":1,"params":{"pawnValue":110}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":1.1,"params":{"pawnValue":90}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 10/2916 (0.34%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":1.1,"params":{"pawnValue":100}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 24, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},{"id":"pawnCount","weight":1.1,"params":{"pawnValue":110}},null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 15/2916 (0.51%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 20/2916 (0.69%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 25/2916 (0.86%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 30/2916 (1.03%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 35/2916 (1.20%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":0.8,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 40/2916 (1.37%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 45/2916 (1.54%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 50/2916 (1.71%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 55/2916 (1.89%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 60/2916 (2.06%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 65/2916 (2.23%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 70/2916 (2.40%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 75/2916 (2.57%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 80/2916 (2.74%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 85/2916 (2.91%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 90/2916 (3.09%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.2,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 95/2916 (3.26%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.44, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 100/2916 (3.43%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":800,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.46, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.49, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 105/2916 (3.60%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 110/2916 (3.77%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.48, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.43, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":80,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.52, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.50, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] Progress: 115/2916 (3.94%)
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":100,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.47, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":8}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.45, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":10}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+   Running comparison for N=50... (Mock Implementation)
+   Win rate for config1: 0.51, len1: 15, len2: 24
+	configs:
+	{"factors":[{"id":"pawnAdvancement","weight":1.5,"params":{"nearPromotionBonus":1200,"almostNearPromotionBonus":120,"rankBonusMultiplier":12}},null,null]}
+	{"factors":[{"id":"pawnAdvancement","weight":1,"params":{"nearPromotionBonus":1000,"almostNearPromotionBonus":100,"rankBonusMultiplier":10}},{"id":"pawnCount","weight":1,"params":{"pawnValue":100}}]}
+[GridSearch] 
+Grid Search Finished.
+[GridSearch] Total time: 6.13 seconds.
+[GridSearch] Tested 118 combinations.
+[GridSearch] No configuration found that significantly outperforms the baseline.
+[GridSearch] Returning baseline configuration as 'best'.
+
+--- Grid Search Complete ---
+No configuration significantly outperformed the baseline.
+Best Config (returned baseline):
+{
+  "factors": [
+    {
+      "id": "pawnAdvancement",
+      "weight": 1,
+      "params": {
+        "nearPromotionBonus": 1000,
+        "almostNearPromotionBonus": 100,
+        "rankBonusMultiplier": 10
+      }
+    },
+    {
+      "id": "pawnCount",
+      "weight": 1,
+      "params": {
+        "pawnValue": 100
+      }
+    }
+  ]
+}

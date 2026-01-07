@@ -1,18 +1,70 @@
-// ai.js
+// ai.js - Главный файл ИИ с обратной совместимостью
+// Использует новую модульную структуру из engine/, но сохраняет старый API
+
 var debug = {
     log: {},
     currentBranch: [],
-    config: {}
+    config: {},
+    tree: {}
 };
 
-function findBestMove(aiConfigLevel, getAllMoves=false) {
+// Загружаем новую модульную систему (если доступна)
+let engineModule = null;
+// let factorRegistry = null;
+let legacyAdapter = null;
+
+if (typeof window === 'undefined') {
+    try {
+        engineModule = require('./engine');
+        // factorRegistry = require('./engine/factors/FactorRegistry').factorRegistry;
+        legacyAdapter = require('./engine/factors/LegacyAdapter');
+    } catch (e) {
+        // Модули еще не загружены, будет использоваться старая система
+        console.warn('New engine modules not available, using legacy system');
+    }
+} else if (typeof window !== 'undefined') {
+    // В браузере модули должны быть загружены через script теги
+    engineModule = window.engineModule || null;
+    // factorRegistry = window.factorRegistry || null;
+    legacyAdapter = window.loadLegacyFactors || null;
+}
+
+// Загружаем старые факторы для обратной совместимости
+if (typeof EVALUATION_FACTORS !== 'undefined' && legacyAdapter) {
+    try {
+        legacyAdapter.loadLegacyFactors(EVALUATION_FACTORS);
+    } catch (e) {
+        console.warn('Failed to load legacy factors:', e);
+    }
+}
+
+/**
+ * Находит лучший ход (использует новую систему, если доступна)
+ */
+function findBestMove(aiConfigLevel, getAllMoves = false) {
+    debug.log = {};
+    debug.tree = {};
+
+    // Используем новую систему, если доступна
+    if (engineModule && engineModule.findBestMove) {
+        return engineModule.findBestMove(aiConfigLevel, getAllMoves);
+    }
+
+    // Иначе используем старую систему (для обратной совместимости)
+    return findBestMoveLegacy(aiConfigLevel, getAllMoves);
+}
+
+/**
+ * Старая реализация findBestMove (для обратной совместимости)
+ */
+function findBestMoveLegacy(aiConfigLevel, getAllMoves = false) {
     debug.log = {};
     debug.tree = {};
 
     if (typeof aiConfigLevel === 'object') {
         debug.config = aiConfigLevel;
         if (!debug.config.depth) {
-            debug.config.depth = 4
+            debug.config.depth = 4;
         }
     } else {
         debug.config = {
@@ -20,63 +72,50 @@ function findBestMove(aiConfigLevel, getAllMoves=false) {
         };
 
         if (aiConfigLevel == 1) {
-            debug.config.depth = 3
+            debug.config.depth = 3;
         } else if (aiConfigLevel == 2) {
-            debug.config.depth = 4
+            debug.config.depth = 4;
         } else if (aiConfigLevel == 3) {
-            debug.config.depth = 5
+            debug.config.depth = 5;
         } else {
             debug.config.depth = 4;
         }
 
-        // TODO: задать конфиг
         if (aiConfigLevel == 5) {
             debug.config.factors = [
                 { id: 'pawnAdvancement', weight: 1.0 }
-            ]
+            ];
         }
 
         if (aiConfigLevel == 6) {
-            // реализация Medium через отдельные факторы
             debug.config.factors = [
-                { id: 'mediumPawnAdvancement', weight: 2.0 },    // (8 - promotionDistance)
-                { id: 'mediumCenterColumnBonus', weight: 0.2 },  // Count of central pawns
-                { id: 'mediumNextMoveSafety', weight: 2.0 },     // Count of pawns with safe next move
-                { id: 'mediumFreePath', weight: 0.7 },          // Count of pawns with free path
-                { id: 'mediumAdjacentThreat', weight: -0.8 },     // Count of adjacent threats against us
-            ]
+                { id: 'mediumPawnAdvancement', weight: 2.0 },
+                { id: 'mediumCenterColumnBonus', weight: 0.2 },
+                { id: 'mediumNextMoveSafety', weight: 2.0 },
+                { id: 'mediumFreePath', weight: 0.7 },
+                { id: 'mediumAdjacentThreat', weight: -0.8 },
+            ];
         }
 
         if (aiConfigLevel == 7) {
             const superSmartAiConfig = {
                 factors: [
-                    // Основа
                     { id: 'pawnCount', weight: 1.0 },
-
-                    // Главная цель - Прорыв
-                    { id: 'pawnAdvancementAdvanced', weight: 1.0 }, // Базовое продвижение
-                    { id: 'passedPawnsPhaseAdaptive', weight: 2.0 }, // Проходные - ключ к победе, особенно в эндшпиле
-                    { id: 'promotionRace', weight: 1.5 }, // Прямое сравнение гонки
-
-                    // Вторая цель - Блокада и структура
-                    { id: 'blockedPawns', weight: -1.2 }, // Штраф за свои блокированные (можно сделать адаптивным)
-                    { id: 'opponentBlockedPawns', weight: 0.7 },  // Бонус за блок врага
-                    { id: 'pawnIslands', weight: -0.4 }, // Штраф за плохую структуру
-                    { id: 'isolatedPawns', weight: -0.6 }, // Штраф за изолированные (обычно слабее)
-                    { id: 'connectedPawns', weight: 0.4 },  // Бонус за связанные
-
-                    // Активность и контроль
-                    { id: 'mobility', weight: 0.2 },  // Базовая мобильность
-                    { id: 'opponentRestriction', weight: 0.3 },  // Ограничение ходов врага
-                    { id: 'keySquareControl', weight: 0.6 },  // Контроль важных полей
-
-                    // Безопасность и тактика
-                    { id: 'threatenedPawns', weight: -1.8 }, // Сильный штраф за атаки
-                    { id: 'potentialCaptures', weight: 0.3 },  // Небольшой учет взятий (поиск важнее)
-
-                    // Дополнительные стратегические факторы
-                    { id: 'pawnMajority', weight: 0.5 }, // Потенциал на эндшпиль
-                    { id: 'openingTempo', weight: 0.1 }, // Небольшой дебютный бонус
+                    { id: 'pawnAdvancementAdvanced', weight: 1.0 },
+                    { id: 'passedPawnsPhaseAdaptive', weight: 2.0 },
+                    { id: 'promotionRace', weight: 1.5 },
+                    { id: 'blockedPawns', weight: -1.2 },
+                    { id: 'opponentBlockedPawns', weight: 0.7 },
+                    { id: 'pawnIslands', weight: -0.4 },
+                    { id: 'isolatedPawns', weight: -0.6 },
+                    { id: 'connectedPawns', weight: 0.4 },
+                    { id: 'mobility', weight: 0.2 },
+                    { id: 'opponentRestriction', weight: 0.3 },
+                    { id: 'keySquareControl', weight: 0.6 },
+                    { id: 'threatenedPawns', weight: -1.8 },
+                    { id: 'potentialCaptures', weight: 0.3 },
+                    { id: 'pawnMajority', weight: 0.5 },
+                    { id: 'openingTempo', weight: 0.1 },
                 ]
             };
             debug.config.factors = superSmartAiConfig.factors;
@@ -89,11 +128,14 @@ function findBestMove(aiConfigLevel, getAllMoves=false) {
         debug.config,
         -Infinity,
         Infinity,
-        { path: [], branchId: 'root' }, // Инициализация корневой ветки
+        { path: [], branchId: 'root' },
         getAllMoves,
     );
 }
 
+/**
+ * Minimax (старая реализация для обратной совместимости)
+ */
 function minimax(
     depth,
     isMaximizing,
@@ -101,7 +143,7 @@ function minimax(
     alpha,
     beta,
     ctx,
-    getAllMoves=false,
+    getAllMoves = false,
 ) {
     let evaluation = {};
     let nodeId = '';
@@ -118,13 +160,10 @@ function minimax(
         };
     }
 
-    // Запись в лог перед вычислениями
     ENABLE_LOGGING && (debug.log[nodeId] = evaluation);
 
-    // console.error('arguments', [].slice.apply(arguments));
     if (depth === 0 || isFinished()) {
-        const score = evaluateBoard(config, ENABLE_LOGGING ? nodeId : null, ctx.path)
-
+        const score = evaluateBoard(config, ENABLE_LOGGING ? nodeId : null, ctx.path);
         if (ENABLE_LOGGING) {
             evaluation.score = score;
             evaluation.isLeaf = true;
@@ -132,21 +171,20 @@ function minimax(
         return { score, evaluation };
     }
 
-    const possibleMoves = getMoves({ verbose: true});
-    IS_DEBUG && console.warn('START MINIMAX. moves: ', possibleMoves, `depth ${depth}, PATH: ${path.join(' ')} isMax: ${isMaximizing}`)
+    const possibleMoves = getMoves({ verbose: true });
+    IS_DEBUG && console.warn('START MINIMAX. moves: ', possibleMoves, `depth ${depth}, PATH: ${ctx.path.join(' ')} isMax: ${isMaximizing}`);
     let movesScores = [];
 
     let bestScore = isMaximizing ? -Infinity : Infinity;
     for (let i = 0; i < possibleMoves.length; i++) {
         const move = possibleMoves[i];
-
         const childCtx = {
             path: [...ctx.path, move.san],
         };
 
         let current_node = {};
         if (ENABLE_LOGGING) {
-            branchId = `${nodeId}-${i}`
+            branchId = `${nodeId}-${i}`;
             childCtx['branchId'] = branchId;
 
             getTreePath(ctx.path)[move.san] = {
@@ -169,7 +207,6 @@ function minimax(
             current_node['zdrawn'] = drawnGame;
             current_node['znodeId'] = nodeId;
 
-            // Запись данных дочернего узла
             evaluation.children.push({
                 move: move.san,
                 score,
@@ -182,36 +219,39 @@ function minimax(
 
         game.undo();
 
-        IS_DEBUG && console.warn(`    FOR MOVE ${move.san} GOT SCORE: ${score} (prev ${bestScore}${(isMaximizing ? score >= bestScore : score <= bestScore) ? '!!!' : ''}), depth ${depth}, isMax: ${isMaximizing}`)
+        IS_DEBUG && console.warn(`    FOR MOVE ${move.san} GOT SCORE: ${score} (prev ${bestScore}${(isMaximizing ? score >= bestScore : score <= bestScore) ? '!!!' : ''}), depth ${depth}, isMax: ${isMaximizing}`);
 
         if (getAllMoves == true) {
             movesScores.push({ move: move, score, evaluation, path: childCtx.path });
-            continue
+            continue;
         }
 
         if (isMaximizing ? score >= bestScore : score <= bestScore) {
-            // IS_DEBUG && console.warn(`        FOR MOVE ${move} SAVE SCORE: ${score}, depth ${depth}, PATH: ${path.join(' ')}, BestScore: ${bestScore}, isMax: ${isMaximizing}`)
-            // Обновление лучшего хода только если needMoveTracking = true, иначе только score
             movesScores.push({ move: move, score, evaluation, path: childCtx.path });
-
             bestScore = score;
-
             isMaximizing ? alpha = Math.max(alpha, score) : beta = Math.min(beta, score);
         }
 
-        // Альфа-бета отсечение
         if (beta <= alpha) break;
     }
 
     if (getAllMoves === true) return movesScores;
 
     const val = getBestRandomMove(movesScores, mode = isMaximizing ? 'max' : 'min');
-    IS_DEBUG && console.log('getBestRandomMove', mode = isMaximizing ? 'max' : 'min', structuredClone(val), 'depth', depth, structuredClone(movesScores))
+    IS_DEBUG && console.log('getBestRandomMove', mode = isMaximizing ? 'max' : 'min', structuredClone(val), 'depth', depth, structuredClone(movesScores));
     return val;
 }
 
-
+/**
+ * Оценка доски (старая реализация)
+ */
 function evaluateBoard(config, nodeId, path) {
+    // Используем новую систему, если доступна
+    if (engineModule && engineModule.evaluateBoard) {
+        return engineModule.evaluateBoard(config, nodeId, path);
+    }
+
+    // Старая реализация
     if (config?.aiDifficulty === 0) {
         ENABLE_LOGGING && logNodeFactors(nodeId, {'random': 1}, {'random': 1}, 0, 0);
         return 0;
@@ -220,23 +260,21 @@ function evaluateBoard(config, nodeId, path) {
     if (config?.aiDifficulty >= 1 && config?.aiDifficulty <= 3) {
         const score = evaluateBoardMedium(path);
         ENABLE_LOGGING && logNodeFactors(nodeId, {'medium': 1}, {'medium': 1}, 0, score);
-        return score
+        return score;
     }
 
     let finishedScore = 0;
     if (config?.aiDifficulty >= 4) {
-        // Winning condition check
-        finishedScore = checkGameEnd(isFinished(), path)
+        finishedScore = checkGameEnd(isFinished(), path);
         if (finishedScore !== null) {
             ENABLE_LOGGING && logNodeFactors(nodeId, {'gameEnd': 1}, {'gameEnd': 1}, finishedScore, finishedScore);
             return finishedScore;
         }
     }
 
-    // Если конфиг пустой или невалидный, возвращаем 0 (или обрабатываем как ошибку)
     if (!config || !config.factors || config.factors.length === 0) {
         ENABLE_LOGGING && logNodeFactors(nodeId, {'emptyConfig': 1}, {'emptyConfig': 1}, 0, 0);
-        return 0; // Или вернуть оценку из evaluateBoardMedium, если это базовый уровень
+        return 0;
     }
 
     let totalWhiteScore = 0;
@@ -244,56 +282,54 @@ function evaluateBoard(config, nodeId, path) {
     const whiteComponents = {};
     const blackComponents = {};
 
-    // 2. Итерация по факторам из конфигурации
     for (const factorConfig of config.factors) {
         if (factorConfig.weight === 0) {
-            // не вычисляем фактор ради ускорения
             continue;
         }
-        const factorDefinition = EVALUATION_FACTORS[factorConfig.id];
+        
+        // Используем новую систему, если доступна
+        let factorDefinition = null;
+        if (factorRegistry) {
+            factorDefinition = factorRegistry.get(factorConfig.id);
+        } else if (typeof EVALUATION_FACTORS !== 'undefined') {
+            factorDefinition = EVALUATION_FACTORS[factorConfig.id];
+        }
 
         if (!factorDefinition) {
             console.warn(`Evaluation factor with id "${factorConfig.id}" not found.`);
             continue;
         }
 
-        // Определяем параметры: объединяем дефолтные и из конфига
         const params = {
             ...(factorDefinition.defaultParams || {}),
             ...(factorConfig.params || {})
         };
 
-        // Вычисляем оценку для каждого цвета
         const whiteFactorScore = factorDefinition.evaluate('w', params);
         const blackFactorScore = factorDefinition.evaluate('b', params);
 
-        // Применяем вес
         const weightedWhiteScore = whiteFactorScore * factorConfig.weight;
         const weightedBlackScore = blackFactorScore * factorConfig.weight;
 
         if (isNaN(weightedWhiteScore)) {
-            console.error('isNan', factorDefinition)
+            console.error('isNan', factorDefinition);
         }
 
-        // Суммируем
         totalWhiteScore += weightedWhiteScore;
         totalBlackScore += weightedBlackScore;
 
-        // Сохраняем компоненты для логирования (с учетом веса)
         if (ENABLE_LOGGING) {
             whiteComponents[factorConfig.id] = weightedWhiteScore;
             blackComponents[factorConfig.id] = weightedBlackScore;
         }
     }
 
-    // 3. Финальный счет (Белые - Черные)
     const finalScore = totalWhiteScore - totalBlackScore;
 
     if (isNaN(finalScore)) {
         // console.error('NaN', config, whiteComponents, blackComponents)
     }
 
-    // 4. Логирование
     ENABLE_LOGGING && logNodeFactors(nodeId, whiteComponents, blackComponents, 0, finalScore);
 
     return finalScore;
@@ -301,7 +337,7 @@ function evaluateBoard(config, nodeId, path) {
 
 function logNodeFactors(nodeId, whiteComponents, blackComponents, finishedScore, totalScore) {
     if (!debug.log[nodeId]) {
-        debug.log[nodeId] = {}; // Убедимся, что объект существует
+        debug.log[nodeId] = {};
     }
     debug.log[nodeId].components = {
         white: whiteComponents,
@@ -314,132 +350,28 @@ function logNodeFactors(nodeId, whiteComponents, blackComponents, finishedScore,
         'scores': {
             'white': whiteComponents,
             'black': blackComponents,
-            'finishedScore': 0, // Так как мы уже проверили
+            'finishedScore': 0,
             'totalScore': finalScore,
         }
     });
 }
 
-function evaluateBoard3(aiDifficulty, nodeId, path) {
-    if (aiDifficulty == 0) {
-        // Запись компонентов в лог
-        ENABLE_LOGGING && (debug.log[nodeId].components = {
-            white: {},
-            black: {},
-            finishedScore: 0,
-            total: 0,
-        });
-
-        return 0;
-    }
-
-    if (aiDifficulty >= 1 && aiDifficulty <= 3) {
-        const score = evaluateBoardMedium(path);
-        ENABLE_LOGGING && (debug.log[nodeId].components = {
-            total: score,
-        });
-        return score
-    }
-
-    let finishedScore = 0;
-    if (aiDifficulty >= 4) {
-        // Winning condition check
-        // console.log(debug.log[nodeId])
-        finishedScore = checkGameEnd(isFinished(), path)
-        if (finishedScore != 0) {
-            //     IS_DEBUG && console.log('evaluateBoard3', isFinished(), finishedScore);
-            // Запись компонентов в лог
-            ENABLE_LOGGING && (debug.log[nodeId].components = {
-                white: {},
-                black: {},
-                finishedScore: finishedScore,
-                total: finishedScore,
-            });
-            return finishedScore;
-        }
-    }
-
-    let whitePawnAdvancement = 0;
-    let blackPawnAdvancement = 0;
-    if (aiDifficulty >= 5) {
-        whitePawnAdvancement = evaluatePawnAdvancement('w')
-        blackPawnAdvancement = evaluatePawnAdvancement('b')
-    }
-
-    let whitePawnCount = 0;
-    let blackPawnCount = 0;
-    if (aiDifficulty >= 6) {
-        whitePawnCount = evaluatePawnCount('w')
-        blackPawnCount = evaluatePawnCount('b')
-    }
-
-    let whiteCaptureOpportunities = 0;
-    let blackCaptureOpportunities = 0;
-    if (aiDifficulty >= 7) {
-        whiteCaptureOpportunities += evaluateCaptureOpportunities('w')
-        blackCaptureOpportunities += evaluateCaptureOpportunities('b')
-    }
-
-    let whiteFreePath = 0;
-    let blackFreePath = 0;
-    if (aiDifficulty >= 8) {
-        whiteFreePath += evaluateFreePath('w')
-        blackFreePath += evaluateFreePath('b')
-    }
-
-    let whiteMajority = 0;
-    let blackMajority = 0;
-    if (aiDifficulty >= 9) {
-        whiteMajority += evaluateMajority('w')
-        blackMajority += evaluateMajority('b')
-    }
-
-    const whiteScore = whitePawnAdvancement + whitePawnCount + whiteCaptureOpportunities + whiteFreePath + whiteMajority;
-    const blackScore = blackPawnAdvancement + blackPawnCount + blackCaptureOpportunities + blackFreePath + blackMajority;
-
-    IS_DEBUG && console.log('evaluateBoard3', whiteScore, blackScore, whiteScore - blackScore, {
-        'scores': {
-            'whitePawnAdvancement': whitePawnAdvancement,
-            'whitePawnCount': whitePawnCount,
-            'blackPawnAdvancement': blackPawnAdvancement,
-            'blackPawnCount': blackPawnCount,
-            'whiteCaptureOpportunities': whiteCaptureOpportunities,
-            'blackCaptureOpportunities': blackCaptureOpportunities,
-            'whiteFreePath': whiteFreePath,
-            'blackFreePath': blackFreePath,
-            'whiteMajority': whiteMajority,
-            'blackMajority': blackMajority,
-
-            'whiteScore': whiteScore,
-            'blackScore': blackScore,
-            'finishedScore': finishedScore,
-            'totalScore': finishedScore + whiteScore - blackScore,
-        }
-    }, drawBoard())
-
-    // Запись компонентов в лог
-    ENABLE_LOGGING && (debug.log[nodeId].components = {
-        white: { whitePawnAdvancement, whitePawnCount, whiteCaptureOpportunities, whiteFreePath, whiteMajority },
-        black: { blackPawnAdvancement, blackPawnCount, blackCaptureOpportunities, blackFreePath, blackMajority },
-        finishedScore: finishedScore,
-        total: whiteScore - blackScore,
-    });
-
-    // return debug.log[nodeId].components.total;
-
-    return whiteScore - blackScore;
-}
-
 function makeAiMove(aiDifficulty) {
+    // Используем новую систему, если доступна
+    if (engineModule && engineModule.makeAiMove) {
+        return engineModule.makeAiMove(aiDifficulty);
+    }
+
+    // Старая реализация
     if (isFinished()) return;
 
     var possibleMoves = getMoves();
     if (possibleMoves.length === 0) return;
 
-    const { move, score } = findBestMove(aiDifficulty)
-    console.log('makeAiMove', move, 'aiDifficulty', aiDifficulty, 'score:', score)
+    const { move, score } = findBestMove(aiDifficulty);
+    console.log('makeAiMove', move, 'aiDifficulty', aiDifficulty, 'score:', score);
     if (!move) {
-        // No moves available, return null. evaluateBoard will handle the consequences
+        return null;
     }
 
     game.move(move);
@@ -449,33 +381,23 @@ function makeAiMove(aiDifficulty) {
         updateURL();
     }
 
-    return { move, score }
+    return { move, score };
 }
 
 function run_game(cnt, ai1, ai2) {
     let stats = []
     for (var i = 0; i < cnt; ++i) {
         initializeGame()
-        // console.log('start game', ai1, ai2)
         while (!isFinished()) {
             if (getMoves().length === 0) break;
             const currentAiLevel = game.turn() == 'w' ? ai1 : ai2;
             const { move } = findBestMove(currentAiLevel);
-            // console.log('run move', move)
             if (!move) break;
             game.move(move);
         }
-        // console.log('finished:', isFinished(), 'turn', game.turn())
         stats.push(isFinished())
 
-        // Отображение прогресса игр
         process.stdout.write('.')
-        // if ((i + 1) % 10 === 0) {
-        //     process.stdout.write('\n');
-        //     // if ((i + 1) === cnt) {
-        //     //     process.stdout.write('\n'); // Переходим на новую строку, если все игры завершены
-        //     // }
-        // }
         ENABLE_LOGGING && logGame(ai1, ai2, isFinished(), game);
     }
     return stats;
@@ -501,16 +423,12 @@ function getBestRandomMove(movesScores, mode = 'max') {
     let candidates = [];
     let currentCandidateIndex = 0;
 
-    // Одна итерация с одновременной проверкой всех условий
     for (let i = 0; i < movesScores.length; i++) {
         const move = movesScores[i];
-
-        // Проверка score
         const isBetterScore = mode === 'max'
             ? move.score > bestScore
             : move.score < bestScore;
 
-        // Обновление лучшего score и сброс данных
         if (isBetterScore) {
             bestScore = move.score;
             minPathLength = Infinity;
@@ -518,16 +436,13 @@ function getBestRandomMove(movesScores, mode = 'max') {
             candidates.length = 0;
         }
 
-        // Только для ходов с текущим лучшим score
         if (move.score === bestScore) {
-            // Проверка длины пути
             if (move.path.length < minPathLength) {
                 minPathLength = move.path.length;
                 currentCandidateIndex = 0;
                 candidates.length = 0;
             }
 
-            // Добавление в кандидаты
             if (move.path.length === minPathLength) {
                 if (currentCandidateIndex < candidates.length) {
                     candidates[currentCandidateIndex++] = move;
@@ -539,10 +454,8 @@ function getBestRandomMove(movesScores, mode = 'max') {
         }
     }
 
-    // Случайный выбор из кандидатов
     return candidates[Math.floor(Math.random() * candidates.length)];
 }
-
 
 function evaluateMove(move, aiDifficulty, depth = 3) {
     depth = depth || 3;
@@ -553,240 +466,35 @@ function evaluateMove(move, aiDifficulty, depth = 3) {
     return { move, score }
 }
 
-
-
-function getMajorityRowsScore(firstPawn, secondPawn, opponentPawn) {
-    const myColor = firstPawn.color;
-    const targetRow = { 'w': 7, 'b': 0 };
-
-    // Расстояние до превращения для каждой пешки
-    const firstDistance = Math.abs(targetRow[myColor] - firstPawn.row);
-    const secondDistance = Math.abs(targetRow[myColor] - secondPawn.row);
-
-    // Среднее арифметическое количества шагов
-    const distance = Math.ceil((firstDistance + secondDistance) / 2);
-
-    switch (distance) {
-        case 0: return Infinity;  // победа
-        case 1: return 1000;  // предпоследний ряд - почти победа
-        case 2: return 500;  // бонус за 6ю для белых и 3ю для черных горизонталь
-        case 3: return 200;  // бонус за 6ю для белых и 3ю для черных горизонталь
-        case 4: return 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
-        case 5: return 50;  // бонус за 6ю для белых и 3ю для черных горизонталь
-        // default: ; // бонус за расстояние для остальных клеток
+function checkGameEnd(isFinishedResult, path) {
+    if (!isFinishedResult) {
+        return null;
     }
 
-    return 0
-}
-
-
-
-
-function evaluateMajority(color) {
-    // Получаем пешки обоих цветов
-    const myPawns = getPawns(color);
-    const opponentColor = color === 'w' ? 'b' : 'w';
-    const opponentPawns = getPawns(opponentColor);
-
-    let totalScore = 0;
-
-    // Определяем функцию для проверки, находится ли пешка противника "впереди"
-    const isOpponentAhead = (myPawn, oppPawn) => {
-        if (color === 'w') {
-            // Для белых "впереди" означает большее значение row
-            return oppPawn.row > myPawn.row;
-        } else {
-            // Для черных "впереди" означает меньшее значение row
-            return oppPawn.row < myPawn.row;
+    let score = 0;
+    if (isFinishedResult.includes('w')) {
+        score = +100000;
+        if (path) {
+            score += 100 - path.length;
         }
-    };
-
-    // Группируем наши пешки по столбцам
-    const myPawnsByCol = {};
-    myPawns.forEach(pawn => {
-        if (!myPawnsByCol[pawn.col]) {
-            myPawnsByCol[pawn.col] = [];
+        return score;
+    }
+    if (isFinishedResult.includes('b')) {
+        score = -100000;
+        if (path) {
+            score -= 100 - path.length;
         }
-        myPawnsByCol[pawn.col].push(pawn);
-    });
-
-    // Проверяем каждую пару соседних столбцов с нашими пешками
-    const columnsWithMyPawns = Object.keys(myPawnsByCol).map(Number).sort((a, b) => a - b);
-
-    for (let i = 0; i < columnsWithMyPawns.length - 1; i++) {
-        const col1 = columnsWithMyPawns[i];
-        const col2 = columnsWithMyPawns[i + 1];
-
-        // Проверяем, что столбцы соседние
-        if (col2 - col1 !== 1) continue;
-
-        // Нашли пару соседних столбцов с нашими пешками
-        const myPawnsInCol1 = myPawnsByCol[col1];
-        const myPawnsInCol2 = myPawnsByCol[col2];
-        const myPawnsInArea = [...myPawnsInCol1, ...myPawnsInCol2];
-
-        // У нас должно быть не менее двух пешек в этих столбцах
-        if (myPawnsInArea.length < 2) continue;
-
-        // Берем две самые продвинутые наши пешки
-        const sortedMyPawns = [...myPawnsInArea].sort((a, b) => {
-            // Для белых более продвинутые - с большей row, для черных - с меньшей
-            return color === 'w' ? b.row - a.row : a.row - b.row;
-        });
-
-        const firstPawn = sortedMyPawns[0];
-        const secondPawn = sortedMyPawns[1];
-
-        // Найдем самую выдвинутую нашу пешку для определения "впереди"
-        const mostAdvancedRow = color === 'w' ? Math.max(firstPawn.row, secondPawn.row) : Math.min(firstPawn.row, secondPawn.row);
-
-        // Проверяем пешки противника в области (в тех же и соседних столбцах)
-        const relevantOpponentCols = [col1 - 1, col1, col2, col2 + 1].filter(col => col >= 0);
-
-        // Фильтруем только пешки противника, которые находятся впереди наших пешек
-        const opponentPawnsAhead = opponentPawns.filter(pawn => {
-            // Проверяем, что пешка находится в рассматриваемых столбцах
-            if (!relevantOpponentCols.includes(pawn.col)) return false;
-
-            // Проверяем, что пешка находится впереди самой продвинутой нашей пешки
-            if (color === 'w') {
-                return pawn.row > mostAdvancedRow;
-            } else {
-                return pawn.row < mostAdvancedRow;
-            }
-        });
-
-        // Если у противника ровно одна пешка впереди наших в этой области
-        if (opponentPawnsAhead.length === 1) {
-            const opponentPawn = opponentPawnsAhead[0];
-
-            // Вычисляем score в зависимости от близости к финишу
-            const score = getMajorityRowsScore(firstPawn, secondPawn, opponentPawn);
-            // console.log(color, score, firstPawn, secondPawn, opponentPawn)
-            totalScore += score;
-        }
+        return score;
     }
 
-    return totalScore;
+    return null;
 }
-
-
-function evaluatePawnAdvancement(color) {
-    // бонус за расстояние до финиша
-    let score = 0;
-    const promotionRow = color === 'w' ? 7 : 0;
-    getPawns(color).forEach(pawn => {
-        const distance = Math.abs(pawn.row - promotionRow);
-        switch (distance) {
-            case 0: score += 10000;  // победа
-            case 1: score += 1000;  // предпоследний ряд - почти победа
-            case 2: score += 100;  // бонус за 6ю для белых и 3ю для черных горизонталь
-            default: score += (7 - distance) * 10; // бонус за расстояние для остальных клеток
-        }
-    });
-    return score;
-}
-
-
-// 2. Новые аспекты: подсчет пешек и оценка разменов
-function evaluatePawnCount(color) {
-    const count = getPawns(color).length;
-    return count * 50; // +50 за каждую пешку
-}
-
-function evaluateCaptureOpportunities(color) {
-    let score = 0;
-    const enemyColor = color === 'w' ? 'b' : 'w';
-    const forward = color === 'w' ? 1 : -1;
-
-    getPawns(color).forEach(pawn => {
-        const captureCols = [pawn.col - 1, pawn.col + 1];
-
-        captureCols.forEach(cc => {
-            if (cc < 0 || cc >= 8) return;
-
-            const targetRow = pawn.row + forward;
-            if (targetRow < 0 || targetRow >= 8) return;
-
-            const target = game.board()[7 - targetRow][cc];
-            if (target && target.color === enemyColor) {
-                // Проверка безопасности взятия
-
-                // Проверяем защиту своей пешки после взятия
-                // число attackers включает в себя саму атакующую пешку
-                const attackers = [cc - 1, cc + 1].filter(dc =>
-                    dc >= 0 && dc <= 7 && game.board()[7 - pawn.row][dc]?.color === color
-                ).length;
-
-                // Проверяем ответное взятие (защитники пешки)
-                const defenders = [cc - 1, cc + 1].filter(dc =>
-                    dc >= 0 && dc <= 7 && game.board()[7 - (targetRow + forward)][dc]?.color === enemyColor
-                ).length;
-
-                let move_score = 0
-                if (attackers == defenders) {
-                    move_score = 20; // Нейтральный размен
-                    // TODO: учитывать, выгодны ли нейтральные размены или нет
-                } else if (attackers === 1 && defenders == 0) {
-                    move_score = 80;
-                } else {
-                    move_score = (attackers - defenders) * 40;
-                }
-
-                IS_DEBUG && console.error(`ВЗЯТИЕ ${pawn?.square} x ${target.square}. attackers: ${attackers}, defenders: ${defenders}, move_score: ${move_score}`)
-
-                score += move_score
-            }
-        });
-    });
-
-    return score;
-}
-
-function evaluateFreePath(color) {
-    let score = 0;
-    const enemyColor = color === 'w' ? 'b' : 'w';
-    const forward = color === 'w' ? 1 : -1;
-    const promotionRow = color === 'w' ? 7 : 0;
-
-    getPawns(color).forEach(pawn => {
-        let isRowFree = true;
-        for (let r = pawn.row + 1; r < promotionRow; r += forward) {
-            if (game.board()[7 - r][pawn.col]) {
-                isRowFree = false;
-                break;
-            }
-        }
-        let isFullPathFree = isRowFree ? true : false;
-        if (isRowFree) {
-            for (let c = Math.max(pawn.col - 1, 0); c <= Math.min(pawn.col + 1, 7); ++c) {
-                for (let r = pawn.row + 1; r < promotionRow; r += forward) {
-                    if (game.board()[7 - r][c] && game.board()[7 - r][c].color == enemyColor) {
-                        isFullPathFree = false;
-                        break;
-                    }
-                }
-            }
-        }
-        if (isRowFree) {
-            // score += 20;
-            if (isFullPathFree) {
-                score += 100
-            }
-        }
-        IS_DEBUG && console.error(pawn?.square, 'isRowFree', isRowFree, 'isFullPathFree', isFullPathFree)
-    });
-
-    return score;
-}
-
 
 function evaluateBoardMedium(path) {
     let score = 0;
     const board = game.board();
 
-    //Winning condition check
-    const isFinishedResult = checkGameEnd(isFinished(), path)
+    const isFinishedResult = checkGameEnd(isFinished(), path);
     if (isFinishedResult !== null) {
         return isFinishedResult;
     }
@@ -795,9 +503,6 @@ function evaluateBoardMedium(path) {
         for (let row = 0; row < 8; row++) {
             const piece = board[row][col];
             if (piece && piece.type === 'p') {
-                // Goal: Maximize pawn promotion chances
-
-                // Calculate distance to promotion
                 let promotionDistance;
                 if (piece.color === 'b') {
                     promotionDistance = 7 - row;
@@ -805,49 +510,34 @@ function evaluateBoardMedium(path) {
                     promotionDistance = row;
                 }
 
-                // Center column bonus
                 let centerColumnBonus = 0;
                 if (col > 0 && col < 7) {
-                    centerColumnBonus = 0.2
+                    centerColumnBonus = 0.2;
                 }
 
-                // Prioritize: Is the pawn on the next move free?
                 let nextMoveFree = 0;
                 if (piece.color === 'b') {
-                    // Check if the pawn can move forward one square
                     if (row + 1 < 8 && !board[row + 1][col]) {
                         let willBeFreeScore = 0;
-                        // Check if there are any white pawns that could capture after it moves
                         if (col > 0 && row + 2 < 8 && board[row + 2][col - 1] && board[row + 2][col - 1].color === 'w') {
-
                         } else if (col < 7 && row + 2 < 8 && board[row + 2][col + 1] && board[row + 2][col + 1].color === 'w') {
-
                         } else {
-                            willBeFreeScore = 1
+                            willBeFreeScore = 1;
                         }
-
-                        nextMoveFree += willBeFreeScore
+                        nextMoveFree += willBeFreeScore;
                     }
-
                 } else {
-                    // Check if the pawn can move forward one square
                     if (row - 1 >= 0 && !board[row - 1][col]) {
-
-                        let willBeFreeScore = 0
-                        // Check if there are any black pawns that could capture after it moves
+                        let willBeFreeScore = 0;
                         if (col > 0 && row - 2 >= 0 && board[row - 2][col - 1] && board[row - 2][col - 1].color === 'b') {
-
                         } else if (col < 7 && row - 2 >= 0 && board[row - 2][col + 1] && board[row - 2][col + 1].color === 'b') {
-
-
                         } else {
-                            willBeFreeScore = 1
+                            willBeFreeScore = 1;
                         }
-                        nextMoveFree += willBeFreeScore
+                        nextMoveFree += willBeFreeScore;
                     }
                 }
 
-                // Free path bonus (no pieces in front)
                 let freePathBonus = 0;
                 if (piece.color === 'b') {
                     let isPathBlocked = false;
@@ -860,7 +550,7 @@ function evaluateBoardMedium(path) {
                     if (!isPathBlocked) {
                         freePathBonus += 0.7;
                     }
-                } else { // White
+                } else {
                     let isPathBlocked = false;
                     for (let r = row - 1; r >= 0; r--) {
                         if (board[r][col]) {
@@ -873,7 +563,6 @@ function evaluateBoardMedium(path) {
                     }
                 }
 
-                // Adjacent columns blocked penalty (Discourage being captured)
                 let adjacentThreatPenalty = 0;
                 if (piece.color === 'b') {
                     if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'w') {
@@ -891,13 +580,12 @@ function evaluateBoardMedium(path) {
                     }
                 }
 
-                // Combine factors, weighting promotion distance higher
                 let pieceScore =
-                    (8 - promotionDistance) * 2 +   // Closer is better, weight heavily
+                    (8 - promotionDistance) * 2 +
                     freePathBonus +
                     adjacentThreatPenalty +
                     centerColumnBonus +
-                    nextMoveFree * 2
+                    nextMoveFree * 2;
 
                 if (piece.color === 'b') {
                     score -= pieceScore;
@@ -908,242 +596,22 @@ function evaluateBoardMedium(path) {
         }
     }
 
-    // console.log(`evaluate MEDIUM score: ${score}`)
-
     return score;
-}
-
-function evaluateBoard2Deprecated(game, aiDifficulty) {
-    let promotionDistanceWeight = 2;
-    let freePathWeight = 0.7;
-    let adjacentThreatWeight = -0.8;
-    let centerColumnWeight = 0.2;
-    let nextMoveFreeWeight = 2;
-    let noMovesPenaltyWeight = 5000;
-
-
-    let score = 0;
-    const board = game.board();
-    const turn = game.turn(); // 'w' or 'b'
-    const possibleMoves = getMoves();
-
-    // If no moves are available, penalize it, unless its win
-    score += getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game)
-
-    //Winning condition check
-    const isFinishedResult = isFinished();
-    score += checkGameEnd(isFinishedResult)
-
-    for (let col = 0; col < 8; col++) {
-        for (let row = 0; row < 8; row++) {
-            const piece = board[row][col];
-            if (piece && piece.type === 'p') {
-                piece.row = row;
-                piece.col = col;
-
-                // Goal: Maximize pawn promotion chances
-                let pieceScore = getPieceFactors(piece, board, promotionDistanceWeight, freePathWeight, adjacentThreatWeight, centerColumnWeight, nextMoveFreeWeight);
-
-                if (piece.color === 'b') {
-                    score += pieceScore;
-                } else {
-                    score -= pieceScore;
-                }
-            }
-        }
-    }
-
-    return score;
-}
-
-
-function getPieceFactors(piece, board, promotionDistanceWeight, freePathWeight, adjacentThreatWeight, centerColumnWeight, nextMoveFreeWeight) {
-    // Calculate distance to promotion
-    let promotionDistance = calculatePromotionDistance(piece);
-
-    // Center column bonus
-    let centerColumnBonus = getCenterColumnBonus(piece);
-
-    // Prioritize: Is the pawn on the next move free?
-    let nextMoveFree = getNextMoveFree(piece, board);
-
-    // Free path bonus (no pieces in front)
-    let freePathBonus = getFreePathBonus(piece, board)
-
-    // Adjacent columns blocked penalty (Discourage being captured)
-    let adjacentThreatPenalty = getAdjacentThreatPenalty(piece, board)
-
-    // Combine factors, weighting promotion distance higher
-    return (8 - promotionDistance) * promotionDistanceWeight +   // Closer is better, weight heavily
-        freePathWeight * freePathBonus +
-        adjacentThreatWeight * adjacentThreatPenalty +
-        centerColumnWeight * centerColumnBonus +
-        nextMoveFreeWeight * nextMoveFree
-}
-
-function calculatePromotionDistance(piece) {
-    if (piece.color === 'b') {
-        return 7 - piece.row;
-    } else {
-        return piece.row;
-    }
-}
-
-
-function getCenterColumnBonus(piece) {
-    if (piece.col > 0 && piece.col < 7) {
-        return 0.2
-    }
-
-    return 0
-}
-
-function getNextMoveFree(piece, board) {
-    let nextMoveFree = 0;
-    if (piece.color === 'b') {
-        // Check if the pawn can move forward one square
-        if (piece.row + 1 < 8 && !board[piece.row + 1][piece.col]) {
-            let willBeFreeScore = 0;
-            // Check if there are any white pawns that could capture after it moves
-            if (piece.col > 0 && piece.row + 2 < 8 && board[piece.row + 2][piece.col - 1] && board[piece.row + 2][piece.col - 1].color === 'w') {
-
-            } else if (piece.col < 7 && piece.row + 2 < 8 && board[piece.row + 2][piece.col + 1] && board[piece.row + 2][piece.col + 1].color === 'w') {
-
-            } else {
-                willBeFreeScore = 1
-            }
-
-            nextMoveFree += willBeFreeScore
-        }
-
-    } else {
-        // Check if the pawn can move forward one square
-        if (piece.row - 1 >= 0 && !board[piece.row - 1][piece.col]) {
-
-            let willBeFreeScore = 0
-            // Check if there are any black pawns that could capture after it moves
-            if (piece.col > 0 && piece.row - 2 >= 0 && board[piece.row - 2][piece.col - 1] && board[piece.row - 2][piece.col - 1].color === 'b') {
-
-            } else if (piece.col < 7 && piece.row - 2 >= 0 && board[piece.row - 2][piece.col + 1] && board[piece.row - 2][piece.col + 1].color === 'b') {
-
-
-            } else {
-                willBeFreeScore = 1
-            }
-            nextMoveFree += willBeFreeScore
-        }
-    }
-
-    return nextMoveFree
-}
-
-function getFreePathBonus(piece, board) {
-    let freePathBonus = 0;
-    if (piece.color === 'b') {
-        let isPathBlocked = false;
-        for (let r = piece.row + 1; r < 8; r++) {
-            if (board[r][piece.col]) {
-                isPathBlocked = true;
-                break;
-            }
-        }
-        if (!isPathBlocked) {
-            freePathBonus += 0.7;
-        }
-    } else { // White
-        let isPathBlocked = false;
-        for (let r = piece.row - 1; r >= 0; r--) {
-            if (board[r][piece.col]) {
-                isPathBlocked = true;
-                break;
-            }
-        }
-        if (!isPathBlocked) {
-            freePathBonus += 0.7;
-        }
-    }
-
-    return freePathBonus;
-}
-
-function getAdjacentThreatPenalty(piece, board) {
-    let adjacentThreatPenalty = 0;
-    if (piece.color === 'b') {
-        if (piece.col > 0 && board[piece.row][piece.col - 1] && board[piece.row][piece.col - 1].color === 'w') {
-            adjacentThreatPenalty -= 0.8;
-        }
-        if (piece.col < 7 && board[piece.row][piece.col + 1] && board[piece.row][piece.col + 1].color === 'w') {
-            adjacentThreatPenalty -= 0.8;
-        }
-    } else {
-        if (piece.col > 0 && board[piece.row][piece.col - 1] && board[piece.row][piece.col - 1].color === 'b') {
-            adjacentThreatPenalty -= 0.8;
-        }
-        if (piece.col < 7 && board[piece.row][piece.col + 1] && board[piece.row][piece.col + 1].color === 'b') {
-            adjacentThreatPenalty -= 0.8;
-        }
-    }
-
-    return adjacentThreatPenalty;
-}
-
-function checkGameEnd(isFinishedResult, path) {
-    if (!isFinishedResult) {
-        return null;
-    }
-
-    let score = 0;
-    if (isFinishedResult.includes('w')) {
-        score = +100000;
-        if (path) {
-            score += 100 - path.length;
-        }
-        return score
-    }
-    if (isFinishedResult.includes('b')) {
-        score = -100000;
-        if (path) {
-            score -= 100 - path.length;
-        }
-        return score
-    }
-
-    return null;
-}
-
-function getNoMovesPenalty(possibleMoves, turn, noMovesPenaltyWeight, game) {
-    if (possibleMoves.length === 0 && !isFinished()) {
-        if (turn === 'b') {
-            return -noMovesPenaltyWeight; // This is the ai. It will try to avoid this scenario
-        } else {
-            return noMovesPenaltyWeight
-        }
-    }
-
-    return 0
 }
 
 function logGame(ai1, ai2, isFinished, game) {
     const fs = require('fs');
-
     const pgn = extractMovesFromPGN(game.pgn());
-
     fs.appendFileSync('games.log', `${ai1};${ai2};${isFinished};${pgn}\n`);
 }
 
-
 function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
-    // console.log(`Running comparison between ${ai1} and ${ai2} for ${N} games with confidence level ${confidenceLevel}`)
-
-    // 1. Разделение игр между сторонами
     const N1 = Math.floor(N / 2);
     const N2 = N - N1;
 
-    // 2. Синхронный запуск игр
     const resultsAI1White = run_game(N1, ai1, ai2);
     const resultsAI2White = run_game(N2, ai2, ai1);
 
-    // 3. Подсчёт побед без промежуточного маппинга
     const ai1Wins =
         resultsAI1White.filter(res => res.includes('w')).length +
         resultsAI2White.filter(res => res.includes('b')).length;
@@ -1151,17 +619,10 @@ function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
     const ai2Wins = N - ai1Wins;
     console.log(ai1Wins, ai2Wins)
 
-    // 4. Проверка минимального количества игр
-    // if (ai1Wins < 10 || ai2Wins < 10) {
-    //     console.warn('Минимальный порог в 10 побед не достигнут. Увеличьте N.');
-    // }
-
-    // 5. Z-тест для одной пропорции (H0: p = 0.5)
     const p = ai1Wins / N;
     const z = (p - 0.5) / Math.sqrt(0.25 / N);
     const pVal = 2 * (1 - cumulativeStdNormal(Math.abs(z)));
 
-    // 6. Доверительный интервал
     const zCrit = zScore(1 - (1 - confidenceLevel) / 2);
     const margin = zCrit * Math.sqrt(p * (1 - p) / N);
     const ci = [p - margin, p + margin];
@@ -1169,8 +630,6 @@ function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
     return {
         ai1: ai1Wins,
         ai2: ai2Wins,
-        // winRate: (p * 100).toFixed(1) + '%',
-        // difference: ((p - 0.5) * 100).toFixed(1) + '%',
         winRate: p,
         difference: (p - 0.5) * 100,
         confidenceInterval: ci.map(v => (v * 100).toFixed(1) + '%'),
@@ -1179,9 +638,7 @@ function runComparison(ai1, ai2, N = 1000, confidenceLevel = 0.95) {
     };
 }
 
-// Вспомогательные математические функции
 function cumulativeStdNormal(z) {
-    // Аппроксимация CDF с точностью 1e-5
     const t = 1 / (1 + 0.2316419 * Math.abs(z));
     const d = 0.3989423 * Math.exp(-z * z / 2);
     let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
@@ -1189,7 +646,6 @@ function cumulativeStdNormal(z) {
 }
 
 function zScore(p) {
-    // Аппроксимация обратной CDF для p > 0.5
     if (p < 0.5) return -zScore(1 - p);
     const a = [2.515517, 0.802853, 0.010328];
     const b = [1.432788, 0.189269, 0.001308];
@@ -1197,12 +653,11 @@ function zScore(p) {
     return t - (a[0] + a[1] * t + a[2] * t * t) / (1 + b[0] * t + b[1] * t * t + b[2] * t * t * t);
 }
 
-
 module.exports = {
     makeAiMove,
     run_game,
     findBestMove,
-    evaluateBoard3,
+    evaluateBoard,
     debug,
     runComparison,
-}
+};

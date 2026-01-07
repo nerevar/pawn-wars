@@ -199,11 +199,40 @@
         integrity="sha512-oprzqYFJfo4Bx/nNEcSI0xo7ggJrLc+qQ6hrS3zV/Jn0C4dsg4gu+FXW/Vm0jP9CrV7e5e6dcLUYkg3imjfjbw=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
 
-    <script>var exports = {}; var module = {}</script>
+    <script>
+        // Поддержка CommonJS в браузере
+        var exports = {};
+        var module = { exports: {} };
+        var require = function(path) {
+            // Простая заглушка для require в браузере
+            console.warn('require() called in browser for:', path);
+            return {};
+        };
+    </script>
     <script src="https://unpkg.com/chess.js@1.1.0/dist/cjs/chess.js"></script>
 
     <script src="game.js"></script>
+    <!-- Новая модульная система движка -->
+    <script src="engine/factors/FactorRegistry.js"></script>
+    <script src="engine/factors/BaseFactor.js"></script>
+    <script src="engine/factors/utils.js"></script>
+    <script src="engine/factors/PawnCount.js"></script>
+    <script src="engine/factors/PawnAdvancement.js"></script>
+    <script src="engine/factors/LegacyAdapter.js"></script>
+    <!-- Старые факторы для обратной совместимости -->
     <script src="factors.js"></script>
+    <script>
+        // Загружаем старые факторы в новую систему
+        if (typeof EVALUATION_FACTORS !== 'undefined' && typeof loadLegacyFactors === 'function') {
+            loadLegacyFactors(EVALUATION_FACTORS);
+        }
+    </script>
+    <!-- Модули движка -->
+    <script src="engine/evaluator.js"></script>
+    <script src="engine/search.js"></script>
+    <script src="engine/config.js"></script>
+    <script src="engine/index.js"></script>
+    <!-- Главный файл ИИ (с обратной совместимостью) -->
     <script src="ai.js"></script>
     <script src="script.js"></script>
 </body>
