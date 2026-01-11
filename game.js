@@ -77,37 +77,46 @@ function isFinished() {
     return null;
 }
 
-function initializeGame(moves) {
-    game = new Chess();
+function initializeGame(input) {
+    let initialFen;
 
-    game.clear(); // Start with an empty board
+    // Определяем, что передано: FEN (7 слешей) или строка ходов
+    const isFen = typeof input === 'string' && input.split('/').length === 8;
 
-    // Set up the pawn positions
-    for (let i = 0; i < 8; i++) {
-        game.put({
-            type: 'p',
-            color: 'w'
-        }, String.fromCharCode(97 + i) + '2'); // White pawns on rank 2
-        game.put({
-            type: 'p',
-            color: 'b'
-        }, String.fromCharCode(97 + i) + '7'); // Black pawns on rank 7
-    }
+    if (isFen) {
+        // Если это FEN — использовать его для инициализации
+        initialFen = input.trim();
+        // skipValidation для редактора, но здесь не обязательно
+        game = new Chess(initialFen, { skipValidation: true });
+    } else {
+        // Стартуем с пустой доски и ставим пешки
+        game = new Chess();
+        game.clear();
 
-    let initialFen = '8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1';
-    if (gameMode !== "2player") {
-        if (aiColor === 'w') {
-            initialFen = '8/PPPPPPPP/8/8/8/8/pppppppp/8 b - - 0 1'
+        // Стандартная расстановка пешек (как раньше)
+        for (let i = 0; i < 8; i++) {
+            game.put({ type: 'p', color: 'w' }, String.fromCharCode(97 + i) + '2');
+            game.put({ type: 'p', color: 'b' }, String.fromCharCode(97 + i) + '7');
         }
-    }
 
-    if (moves) {
-        moves.split(' ').forEach(function (item, index) {
-            if (item.includes('.')) return;
-            game.move(item);
-        });
-        // game.load_pgn(moves);
-        initialFen = game.fen();
+        // По умолчанию (или для singleplayer) fen может меняться
+        initialFen = '8/pppppppp/8/8/8/8/PPPPPPPP/8 w - - 0 1';
+        if (gameMode !== "2player") {
+            if (aiColor === 'w') {
+                initialFen = '8/PPPPPPPP/8/8/8/8/pppppppp/8 b - - 0 1';
+                game.load(initialFen);
+            }
+        }
+
+        // Если заданы шаги ходов — применяем их
+        if (input) {
+            input.split(' ').forEach(function (item) {
+                if (!item) return;
+                if (item.includes('.')) return;
+                game.move(item);
+            });
+            initialFen = game.fen();
+        }
     }
 
     return initialFen;
