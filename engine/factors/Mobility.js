@@ -3,6 +3,7 @@
  * Оценка: Бонус за общее количество доступных ходов для всех пешек.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -91,4 +92,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('mobility', new MobilityFactor());
     window.MobilityFactor = MobilityFactor;
 }
+})();
 

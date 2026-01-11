@@ -3,6 +3,7 @@
  * Оценка: Штраф оппоненту (т.е. бонус нам) за клетки, которые атакованы нашими пешками.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -88,4 +89,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('opponentRestriction', new OpponentRestrictionFactor());
     window.OpponentRestrictionFactor = OpponentRestrictionFactor;
 }
+})();
 

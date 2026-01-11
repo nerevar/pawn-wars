@@ -3,6 +3,7 @@
  * Оценка: Суммарная ценность пешек противника, которых мы можем съесть на следующем ходу.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -119,4 +120,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('potentialCaptures', new PotentialCapturesFactor());
     window.PotentialCapturesFactor = PotentialCapturesFactor;
 }
+})();
 

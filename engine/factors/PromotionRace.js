@@ -3,6 +3,7 @@
  * Оценка: Сравнивает "скорость" лучших проходных пешек обеих сторон.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -114,4 +115,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('promotionRace', new PromotionRaceFactor());
     window.PromotionRaceFactor = PromotionRaceFactor;
 }
+})();
 

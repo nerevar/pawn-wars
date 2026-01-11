@@ -3,6 +3,7 @@
  * Оценка: Штраф за каждую нашу пешку, атакованную пешкой противника.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -88,4 +89,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('threatenedPawns', new ThreatenedPawnsFactor());
     window.ThreatenedPawnsFactor = ThreatenedPawnsFactor;
 }
+})();
 

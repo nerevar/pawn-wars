@@ -3,6 +3,7 @@
  * Оценка: Бонус за каждую пешку противника, которая блокирована НАШЕЙ пешкой.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -78,4 +79,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('opponentBlockedPawns', new OpponentBlockedPawnsFactor());
     window.OpponentBlockedPawnsFactor = OpponentBlockedPawnsFactor;
 }
+})();
 

@@ -3,6 +3,7 @@
  * Оценка: Штраф за каждую пешку, которая не может сделать ход вперед (упирается в фигуру).
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -78,4 +79,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('blockedPawns', new BlockedPawnsFactor());
     window.BlockedPawnsFactor = BlockedPawnsFactor;
 }
+})();
 

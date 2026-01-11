@@ -4,6 +4,7 @@
  * Бонус зависит от продвинутости пешки и СТАДИИ ИГРЫ.
  */
 
+(function() {
 function getPawnsFunction() {
     if (typeof window === 'undefined') {
         try {
@@ -127,4 +128,5 @@ if (typeof window === 'undefined') {
     window.factorRegistry.register('passedPawnsPhaseAdaptive', new PassedPawnsPhaseAdaptiveFactor());
     window.PassedPawnsPhaseAdaptiveFactor = PassedPawnsPhaseAdaptiveFactor;
 }
+})();
 
