@@ -23,12 +23,16 @@ function evaluateBoard(config, nodeId = null, path = []) {
     const ENABLE_LOGGING = (typeof global !== 'undefined' ? global.ENABLE_LOGGING : false) ||
                           (typeof window !== 'undefined' ? window.ENABLE_LOGGING : false);
     
+    // Уровень 0: случайная игра
     if (config?.aiDifficulty === 0) {
         if (ENABLE_LOGGING && nodeId) {
             logNodeFactors(nodeId, {'random': 1}, {'random': 1}, 0, 0);
         }
         return 0;
     }
+
+    // Уровни 1-3: используют средние факторы (через конфигурацию)
+    // Это обрабатывается через config.factors, который уже настроен в config.js
 
     // Проверка окончания игры
     const isFinishedFn = (typeof window === 'undefined') 

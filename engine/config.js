@@ -30,8 +30,19 @@ function createAIConfig(aiDifficulty) {
         ];
     }
 
-    // Уровень 6: средние факторы
+    // Уровень 6: средние факторы (основной алгоритм)
     if (aiDifficulty == 6) {
+        config.factors = [
+            { id: 'mediumPawnAdvancement', weight: 2.0 },
+            { id: 'mediumCenterColumnBonus', weight: 0.2 },
+            { id: 'mediumNextMoveSafety', weight: 2.0 },
+            { id: 'mediumFreePath', weight: 0.7 },
+            { id: 'mediumAdjacentThreat', weight: -0.8 },
+        ];
+    }
+
+    // Уровни 1-3 также используют средние факторы
+    if (aiDifficulty >= 1 && aiDifficulty <= 3) {
         config.factors = [
             { id: 'mediumPawnAdvancement', weight: 2.0 },
             { id: 'mediumCenterColumnBonus', weight: 0.2 },

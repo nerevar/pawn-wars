@@ -46,10 +46,13 @@ function registerAllFactors() {
     // Регистрируем факторы по одному
     // Это позволяет легко добавлять новые факторы
     
-    // Базовые факторы
+    // Загружаем все факторы Medium (основной алгоритм)
     if (typeof window === 'undefined') {
-        require('./PawnCount');
-        require('./PawnAdvancement');
+        require('./MediumPawnAdvancement');
+        require('./MediumCenterColumnBonus');
+        require('./MediumNextMoveSafety');
+        require('./MediumFreePath');
+        require('./MediumAdjacentThreat');
     } else if (typeof window !== 'undefined') {
         // В браузере факторы должны быть загружены через script теги
         // или динамически через import

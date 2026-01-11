@@ -216,24 +216,19 @@
     <script src="engine/factors/FactorRegistry.js"></script>
     <script src="engine/factors/BaseFactor.js"></script>
     <script src="engine/factors/utils.js"></script>
-    <script src="engine/factors/PawnCount.js"></script>
-    <script src="engine/factors/PawnAdvancement.js"></script>
-    <script src="engine/factors/LegacyAdapter.js"></script>
-    <!-- Старые факторы для обратной совместимости -->
-    <script src="factors.js"></script>
-    <script>
-        // Загружаем старые факторы в новую систему
-        if (typeof EVALUATION_FACTORS !== 'undefined' && typeof loadLegacyFactors === 'function') {
-            loadLegacyFactors(EVALUATION_FACTORS);
-        }
-    </script>
+    <!-- Факторы Medium (основной алгоритм) -->
+    <script src="engine/factors/MediumPawnAdvancement.js"></script>
+    <script src="engine/factors/MediumCenterColumnBonus.js"></script>
+    <script src="engine/factors/MediumNextMoveSafety.js"></script>
+    <script src="engine/factors/MediumFreePath.js"></script>
+    <script src="engine/factors/MediumAdjacentThreat.js"></script>
     <!-- Модули движка -->
     <script src="engine/evaluator.js"></script>
     <script src="engine/search.js"></script>
     <script src="engine/config.js"></script>
     <script src="engine/index.js"></script>
-    <!-- Главный файл ИИ (с обратной совместимостью) -->
-    <script src="ai.js"></script>
+    <!-- Главный файл ИИ -->
+    <!-- <script src="ai.js"></script> -->
     <script src="script.js"></script>
 </body>
 
