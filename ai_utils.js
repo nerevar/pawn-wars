@@ -8,46 +8,10 @@ var debug = {
     tree: {}
 };
 
-// Загружаем новую модульную систему
-let engineModule = null;
+const findBestMove = require('./engine/index').findBestMove;
+const makeAiMove = require('./engine/index').makeAiMove;
+const evaluateBoard = require('./engine/index').evaluateBoard;
 
-if (typeof window === 'undefined') {
-    try {
-        engineModule = require('./engine');
-    } catch (e) {
-        console.error('Engine modules not available:', e);
-        throw e;
-    }
-} else if (typeof window !== 'undefined') {
-    // В браузере модули должны быть загружены через script теги
-    engineModule = {
-        findBestMove: window.findBestMove,
-        makeAiMove: window.makeAiMove,
-        evaluateBoard: window.evaluateBoard
-    };
-}
-
-/**
- * Находит лучший ход (использует новую систему)
- */
-function findBestMove(aiConfigLevel, getAllMoves = false) {
-    if (!engineModule || !engineModule.findBestMove) {
-        throw new Error('Engine module is not available');
-    }
-    return engineModule.findBestMove(aiConfigLevel, getAllMoves);
-}
-
-
-
-/**
- * Оценка доски (использует новую систему)
- */
-function evaluateBoard(config, nodeId, path) {
-    if (!engineModule || !engineModule.evaluateBoard) {
-        throw new Error('Engine module is not available');
-    }
-    return engineModule.evaluateBoard(config, nodeId, path);
-}
 
 function logNodeFactors(nodeId, whiteComponents, blackComponents, finishedScore, totalScore) {
     if (!debug.log[nodeId]) {
@@ -61,12 +25,6 @@ function logNodeFactors(nodeId, whiteComponents, blackComponents, finishedScore,
     };
 }
 
-function makeAiMove(aiDifficulty) {
-    if (!engineModule || !engineModule.makeAiMove) {
-        throw new Error('Engine module is not available');
-    }
-    return engineModule.makeAiMove(aiDifficulty);
-}
 
 function run_game(cnt, ai1, ai2) {
     let stats = []

@@ -233,7 +233,7 @@ function gridSearchEvaluationConfigs(tuningSpec, options = {}) {
 // -----------------------------------------
 
 // Импорты необходимых функций
-const { runComparison, debug } = require('./ai.js')
+const { runComparison, debug } = require('./ai_utils.js')
 globalThis.debug = debug;
 const { Chess } = require('./chess.js')
 globalThis.Chess = Chess;

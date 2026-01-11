@@ -18,7 +18,7 @@ const { factorRegistry } = require('./engine/factors/FactorRegistry');
 globalThis.EVALUATION_FACTORS = factorRegistry.toObject();
 
 
-const { run_game, debug, runComparison } = require('./ai.js');
+const { run_game, debug, runComparison } = require('./ai_utils.js');
 globalThis.debug = debug;
 
 var game = new Chess();
@@ -98,7 +98,7 @@ let {
     ai1 = 6,
     ai2 = 2
 } = parseCliArguments();
-
+/*
 ai2 = {
     "mediumPawnAdvancement":
     {
@@ -145,17 +145,6 @@ ai2 = {
             "rankMultiplier": 5,
             "nearGoalBonus": 20,
             "veryNearGoalBonus": 100
-        }
-    },
-    "passedPawns":
-    {
-        "id": "passedPawns",
-        "weight": 2,
-        "params":
-        {
-            "passedPawnBaseBonus": 200,
-            "passedPawnRankMultiplier": 20,
-            "nearGoalPassedBonus": 500
         }
     },
     "passedPawnsPhaseAdaptive":
@@ -299,11 +288,46 @@ ai2 = {
         }
     }
 }
+*/
+
+ai2 = {
+    depth: 5,
+    factors: [
+        { "id": "pawnCount", "weight": 1, "params": { "pawnValue": 100 } },
+        { "id": "pawnAdvancement", "weight": 1, "params": { "nearPromotionBonus": 100, "almostNearPromotionBonus": 500, "enemySideBonus": 30, "rankDistanceBonus": 5 } },
+        { "id": "mediumPawnAdvancement", "weight": 0.5, "params": {} },
+        { "id": "mediumCenterColumnBonus", "weight": 10, "params": {} },
+        { "id": "mediumNextMoveSafety", "weight": 20, "params": {} },
+        { "id": "mediumFreePath", "weight": 0.2, "params": {} },
+        { "id": "mediumAdjacentThreat", "weight": -0.5, "params": {} },
+        { "id": "pawnAdvancementAdvanced", "weight": 2, "params": { "baseScore": 20, "rankMultiplier": 2, "nearGoalBonus": 20, "veryNearGoalBonus": 100 } },
+        // { "id": "passedPawns", "weight": 5, "params": { "passedPawnBaseBonus": 50, "passedPawnRankMultiplier": 20, "nearGoalPassedBonus": 500 } },
+        { "id": "passedPawnsPhaseAdaptive", "weight": 0.5, "params": { "passedPawnBaseBonus": 500, "passedPawnRankMultiplier": 100, "nearGoalPassedBonus": 50, "enablePhaseAdjustment": 0, "endgameMultiplier": 5, "middlegameMultiplier": 0.5, "endgameThreshold": 5, "middlegameThreshold": 1 } },
+        { "id": "blockedPawns", "weight": 1, "params": { "blockedPenalty": 100 } },
+        { "id": "opponentBlockedPawns", "weight": 5, "params": { "opponentBlockedBonus": 100 } },
+        { "id": "mobility", "weight": 2, "params": {} },
+        { "id": "opponentRestriction", "weight": 15, "params": { "attackedSquareBonus": 20, "attackedNearOpponentBonus": 0.5 } },
+        { "id": "connectedPawns", "weight": 5, "params": { "connectedPawnBonus": 10 } },
+        { "id": "openingTempo", "weight": 1, "params": { "doubleMoveBonus": 20, "centerDoubleMoveBonus": 0.5, "maxEffectiveMoveNumber": 1.5 } },
+        { "id": "threatenedPawns", "weight": -1, "params": { "threatenedPenalty": 75, "threatenedAdvancedPenalty": 0 } },
+        { "id": "potentialCaptures", "weight": 2, "params": { "captureBaseValue": 150, "captureRankMultiplier": 30 } },
+        { "id": "pawnIslands", "weight": -5, "params": { "islandPenalty": 0 } },
+        { "id": "isolatedPawns", "weight": -1.5, "params": { "isolatedPawnPenalty": 30, "isolatedAdvancedPenalty": 5 } },
+        { "id": "keySquareControl", "weight": 1, "params": { "controlOpponentFrontBonus": 2, "controlPromotionApproachBonus": 0 } },
+        { "id": "promotionRace", "weight": 10, "params": { "raceWinBonus": 20, "raceAdvantageMultiplier": 5 } },
+        { "id": "pawnMajority", "weight": 10, "params": { "majorityBonus": 10, "centerWeight": 0.2 } }
+    ]
+}
 
 console.log(`start ${N} games between ai ${ai1} and ai ${ai2}`)
 
+configModule = require('./engine/config');
+console.log('ai1:', configModule.normalizeConfig(ai1))
+console.log('ai2:', configModule.normalizeConfig(ai2))
+
 var t1 = performance.now()
-const result = runComparison(ai1, { factors: Object.entries(ai2).map(x => x[1]) }, N);
+// const result = runComparison(ai1, { factors: Object.entries(ai2).map(x => x[1]) }, N);
+const result = runComparison(ai1, ai2, N);
 var t2 = performance.now();
 
 console.log(`Время выполнения: ${((t2 - t1) / 1000).toFixed(2)} сек
