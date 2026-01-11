@@ -11,8 +11,11 @@ globalThis.getPawns = getPawns;
 globalThis.drawBoard = drawBoard;
 globalThis.extractMovesFromPGN = extractMovesFromPGN;
 
-const { EVALUATION_FACTORS } = require('./factors.js');
-globalThis.EVALUATION_FACTORS = EVALUATION_FACTORS;
+// Загружаем новую систему факторов
+require('./engine/factors'); // Автоматически загружает все факторы
+const { factorRegistry } = require('./engine/factors/FactorRegistry');
+// Для обратной совместимости создаем EVALUATION_FACTORS из реестра
+globalThis.EVALUATION_FACTORS = factorRegistry.toObject();
 
 
 const { run_game, debug, runComparison } = require('./ai.js');

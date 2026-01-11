@@ -15,17 +15,14 @@ function getDependencies() {
     const deps = {};
     
     if (typeof window === 'undefined') {
-        // Node.js
         try {
             deps.getPawns = require('../../game').getPawns;
-            deps.game = require('../../game').game || (typeof global !== 'undefined' ? global.game : null);
+            deps.game = typeof global !== 'undefined' ? global.game : null;
         } catch (e) {
-            // Зависимости будут доступны через global
             deps.getPawns = typeof global !== 'undefined' ? global.getPawns : null;
             deps.game = typeof global !== 'undefined' ? global.game : null;
         }
     } else if (typeof window !== 'undefined') {
-        // Браузер
         deps.getPawns = window.getPawns;
         deps.game = window.game;
     }
@@ -35,7 +32,7 @@ function getDependencies() {
 
 // Экспортируем функцию для регистрации всех факторов
 function registerAllFactors() {
-    const { factorRegistry } = typeof window === 'undefined' 
+    const { factorRegistry } = typeof window === 'undefined'
         ? require('./FactorRegistry')
         : { factorRegistry: window.factorRegistry };
     
@@ -44,27 +41,35 @@ function registerAllFactors() {
     }
 
     // Регистрируем факторы по одному
-    // Это позволяет легко добавлять новые факторы
-    
-    // Загружаем все факторы Medium (основной алгоритм)
-    if (typeof window === 'undefined') {
-        require('./MediumPawnAdvancement');
-        require('./MediumCenterColumnBonus');
-        require('./MediumNextMoveSafety');
-        require('./MediumFreePath');
-        require('./MediumAdjacentThreat');
-    } else if (typeof window !== 'undefined') {
-        // В браузере факторы должны быть загружены через script теги
-        // или динамически через import
-    }
-    
-    // Остальные факторы будут загружены автоматически при require/import
-    // Для браузера нужно загружать через script теги в правильном порядке
+    // В Node.js факторы регистрируются автоматически при require
+    // В браузере факторы должны быть загружены через script теги
 }
 
 // Автоматическая регистрация при загрузке модуля (Node.js)
 if (typeof window === 'undefined') {
-    registerAllFactors();
+    // Загружаем все факторы
+    require('./PawnCount');
+    require('./PawnAdvancement');
+    require('./PawnAdvancementAdvanced');
+    require('./MediumPawnAdvancement');
+    require('./MediumCenterColumnBonus');
+    require('./MediumNextMoveSafety');
+    require('./MediumFreePath');
+    require('./MediumAdjacentThreat');
+    require('./PassedPawnsPhaseAdaptive');
+    require('./PromotionRace');
+    require('./BlockedPawns');
+    require('./OpponentBlockedPawns');
+    require('./PawnIslands');
+    require('./IsolatedPawns');
+    require('./ConnectedPawns');
+    require('./Mobility');
+    require('./OpponentRestriction');
+    require('./KeySquareControl');
+    require('./ThreatenedPawns');
+    require('./PotentialCaptures');
+    require('./PawnMajority');
+    require('./OpeningTempo');
 }
 
 // Экспорт для Node.js
@@ -80,4 +85,3 @@ if (typeof window !== 'undefined') {
     window.registerAllFactors = registerAllFactors;
     window.getFactorDependencies = getDependencies;
 }
-

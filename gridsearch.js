@@ -248,8 +248,11 @@ globalThis.getPawns = getPawns;
 globalThis.drawBoard = drawBoard;
 globalThis.extractMovesFromPGN = extractMovesFromPGN;
 
-const { EVALUATION_FACTORS } = require('./factors.js');
-globalThis.EVALUATION_FACTORS = EVALUATION_FACTORS;
+// Загружаем новую систему факторов
+require('./engine/factors'); // Автоматически загружает все факторы
+const { factorRegistry } = require('./engine/factors/FactorRegistry');
+// Для обратной совместимости создаем EVALUATION_FACTORS из реестра
+globalThis.EVALUATION_FACTORS = factorRegistry.toObject();
 
 var game = new Chess();
 globalThis.game = game;
@@ -264,7 +267,7 @@ globalThis.ENABLE_LOGGING = false;
 function runSearch() {
     try {
         const result = gridSearchEvaluationConfigs(
-            EVALUATION_FACTORS,
+            globalThis.EVALUATION_FACTORS,
             {
                 N: 20, // Уменьшим N для быстрого теста
                 logFilePath: 'pawn_battle_grid_search.log',

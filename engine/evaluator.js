@@ -31,15 +31,15 @@ function evaluateBoard(config, nodeId = null, path = []) {
         return 0;
     }
 
-    // Уровни 1-3: используют средние факторы (через конфигурацию)
-    // Это обрабатывается через config.factors, который уже настроен в config.js
+    // Уровни 1-3: используют средние факторы через config.factors
+    // Конфигурация уже настроена в config.js
 
-    // Проверка окончания игры
+    // Проверка окончания игры (для всех уровней)
     const isFinishedFn = (typeof window === 'undefined') 
         ? require('../game').isFinished 
         : (typeof window !== 'undefined' ? window.isFinished : null);
     
-    if (isFinishedFn && config?.aiDifficulty >= 4) {
+    if (isFinishedFn) {
         const finishedResult = isFinishedFn();
         if (finishedResult) {
             const finishedScore = checkGameEnd(finishedResult, path);
