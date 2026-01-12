@@ -30,6 +30,12 @@ function createAIConfig(aiDifficulty) {
         ];
     }
 
+    if (aiDifficulty == 8) {
+        config.factors = [
+            { id: 'mediumPawnAdvancement', weight: 1.0 }
+        ];
+    }
+
     // Уровень 6: средние факторы (основной алгоритм)
     if (aiDifficulty == 6) {
         config.factors = [

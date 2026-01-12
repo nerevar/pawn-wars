@@ -5,7 +5,7 @@
 
 function getDependencies() {
     const deps = {};
-    
+
     if (typeof window === 'undefined') {
         try {
             const gameModule = require('../game');
@@ -22,7 +22,7 @@ function getDependencies() {
         deps.getMoves = window.getMoves;
         deps.isFinished = window.isFinished;
     }
-    
+
     return deps;
 }
 
@@ -31,10 +31,10 @@ function getDependencies() {
  */
 function findBestMove(aiConfigLevel, getAllMoves = false) {
     const { game } = getDependencies();
-    
+
     const debug = (typeof global !== 'undefined' ? global.debug : null) ||
                   (typeof window !== 'undefined' ? window.debug : null);
-    
+
     if (debug) {
         debug.log = {};
         debug.tree = {};
@@ -44,9 +44,9 @@ function findBestMove(aiConfigLevel, getAllMoves = false) {
     const configModule = typeof window === 'undefined'
         ? require('./config')
         : (typeof window !== 'undefined' ? { normalizeConfig: window.normalizeConfig } : null);
-    
+
     const config = configModule ? configModule.normalizeConfig(aiConfigLevel) : { depth: 4, factors: [] };
-    
+
     if (debug) {
         debug.config = config;
     }
@@ -55,7 +55,7 @@ function findBestMove(aiConfigLevel, getAllMoves = false) {
     const searchModule = typeof window === 'undefined'
         ? require('./search')
         : (typeof window !== 'undefined' ? { minimax: window.minimax } : null);
-    
+
     if (!searchModule || !searchModule.minimax) {
         throw new Error('Search module is not available');
     }
@@ -79,24 +79,24 @@ function findBestMove(aiConfigLevel, getAllMoves = false) {
  */
 function makeAiMove(aiDifficulty) {
     const { game, isFinished, getMoves } = getDependencies();
-    
+
     if (isFinished && isFinished()) return;
 
     const possibleMoves = getMoves();
     if (possibleMoves.length === 0) return;
 
     const { move, score } = findBestMove(aiDifficulty);
-    
+
     if (typeof console !== 'undefined') {
         console.log('makeAiMove', move, 'aiDifficulty', aiDifficulty, 'score:', score);
     }
-    
+
     if (!move) {
         return null;
     }
 
     game.move(move);
-    
+
     // Обновление UI (только в браузере)
     if (typeof window !== 'undefined') {
         if (window.board) {
