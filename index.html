@@ -178,6 +178,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
+            position: relative;
         }
 
         .status-card__text {
@@ -191,10 +192,12 @@
             min-height: var(--touch);
             font-size: 1rem;
             display: none;
+            position: absolute;
+            top: 80px;
         }
 
         .status-card .btn--again.is-visible {
-            display: inline-flex;
+            display: block;
         }
 
         .board-wrap {
