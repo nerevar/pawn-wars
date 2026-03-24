@@ -1,6 +1,7 @@
 var board = null;
 var game = new Chess();
-var $status = $('#statusbar');
+var $statusText = $('#statusbar-text');
+var $playAgainBtn = $('#playAgainBtn');
 var $pgn = $('#pgn');
 var aiDifficulty = 1; // Default AI difficulty
 var gameMode = "playerw"; // Default game mode
@@ -142,21 +143,46 @@ function onSnapEnd() {
 }
 
 
+function showModal(el) {
+    $(el).removeAttr('hidden');
+}
+
+function hideModal(el) {
+    $(el).attr('hidden', 'hidden');
+}
+
+function hideGameModals() {
+    hideModal('#modal-start');
+    hideModal('#modal-difficulty');
+}
+
+function showStartModeModal() {
+    hideModal('#modal-difficulty');
+    $playAgainBtn.removeClass('is-visible');
+    showModal('#modal-start');
+}
+
+function showDifficultyModal() {
+    hideModal('#modal-start');
+    showModal('#modal-difficulty');
+}
+
 function updateStatus(isInitial) {
     var status = '';
 
     if (isFinished()) {
-        // anybody has queen?
-        status = (isFinished().includes('w') ? 'White' : 'Black') + ' wins';
+        var winnerIsWhite = isFinished().includes('w');
+        status = winnerIsWhite ? 'Белые победили!' : 'Чёрные победили!';
         if (isInitial !== true) {
-            saveStats()
+            saveStats();
         }
+        $playAgainBtn.addClass('is-visible');
     } else {
-        // game still on
-        status = 'Current turn: ' + (game.turn() === 'w' ? 'White' : 'Black');
+        $playAgainBtn.removeClass('is-visible');
+        status = 'Ход: ' + (game.turn() === 'w' ? 'белые' : 'чёрные');
     }
 
-    $status.text(status);
+    $statusText.text(status);
     $pgn.text(extractMovesFromPGN(game.pgn()));
 }
 
@@ -191,21 +217,32 @@ function updateURL() {
 }
 
 
+function hasMovesInURL() {
+    const moves = new URLSearchParams(window.location.search).get('moves');
+    return moves != null && String(moves).trim().length > 0;
+}
+
 function loadGameFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const moves = urlParams.get('moves');
 
     gameMode = urlParams.get('gameMode') || 'playerw';
-    const currentAiDifficulty = parseInt(urlParams.get('aiDifficulty')); // Default to Easy
+    const currentAiDifficulty = parseInt(urlParams.get('aiDifficulty'), 10);
 
-    if (currentAiDifficulty) {
+    if (!isNaN(currentAiDifficulty) && currentAiDifficulty >= 0) {
         aiDifficulty = currentAiDifficulty;
-        $('#difficulty-select').val(aiDifficulty); // Set difficulty select
+        $('#difficulty-select').val(String(aiDifficulty));
     }
     aiColor = (gameMode === 'playerw') ? 'b' : ((gameMode === 'playerb') ? 'w' : null);
 
     fen = initializeGame(moves);
-    initializeUI(fen)
+    initializeUI(fen);
+
+    if (hasMovesInURL()) {
+        hideGameModals();
+    } else {
+        showStartModeModal();
+    }
 }
 
 $('#undoBtn').on('click', function () {
@@ -218,7 +255,7 @@ $('#undoBtn').on('click', function () {
 
 $('#godModeBtn').on('click', function () {
     godMode = !godMode;
-    $('#godModeBtn').text('God mode:' + (godMode ? 'on' : 'off'))
+    $('#godModeBtn').text('Режим бога: ' + (godMode ? 'вкл' : 'выкл'));
     if (godMode) {
         const chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         for (let col = 0; col < 8; col++) {
@@ -238,6 +275,7 @@ $('#movesBtn').on('click', function () {
         console.log('remove hints');
         $('.square-hint').remove();
         $('.square-index').remove();
+        $('#movesBtn').text('Показать оценки');
     } else {
         const moveScores = findBestMove(aiDifficulty, getAllMoves = true);
         // moveScores.sort((a, b) => game.turn() === 'w' ? b.score - a.score : a.score - b.score)
@@ -256,6 +294,8 @@ $('#movesBtn').on('click', function () {
             $square.prepend(`<div class="square-hint move-top-${index + 1}">${index + 1}) <br/>${moveData.score.toFixed(2)}</div>`);
         });
 
+        $('#movesBtn').text('Скрыть оценки');
+
         // координаты клеток
         const chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         for (let col = 0; col < 8; col++) {
@@ -270,12 +310,40 @@ $('#movesBtn').on('click', function () {
 });
 
 
+var pendingAiGameMode = null;
+
+function startTwoPlayerGame() {
+    gameMode = '2player';
+    aiColor = null;
+    fen = initializeGame();
+    initializeUI(fen);
+    updateURL();
+    hideGameModals();
+}
+
+function startAiGameWithDifficulty(mode, difficulty) {
+    gameMode = mode;
+    aiColor = mode === 'playerw' ? 'b' : 'w';
+    aiDifficulty = difficulty;
+    $('#difficulty-select').val(String(aiDifficulty));
+    fen = initializeGame();
+    initializeUI(fen);
+    updateURL();
+    hideGameModals();
+}
+
+function resetToNewSession() {
+    const base = window.location.pathname || '/';
+    window.history.replaceState({}, '', base);
+    pendingAiGameMode = null;
+    loadGameFromURL();
+}
+
 $(document).ready(function () {
     pageLoadTime = Date.now();
 
-    // Get IP Info
     $.ajax({
-        url: 'https://ipinfo.io?token=' + atob(ipInfoToken),  // free account, 50k requests per month
+        url: 'https://ipinfo.io?token=' + atob(ipInfoToken),
         dataType: 'jsonp',
         success: function (data) {
             ipInfo = data;
@@ -286,36 +354,50 @@ $(document).ready(function () {
         }
     });
 
-    $("#startWhiteAiBtn").on("click", function () {
-        gameMode = "playerw";
-        aiColor = 'b'; // Player plays white
-        fen = initializeGame();
-        initializeUI(fen)
-        updateURL();
+    $('#modal-play-white').on('click', function () {
+        pendingAiGameMode = 'playerw';
+        showDifficultyModal();
     });
 
-    $("#startBlackAiBtn").on("click", function () {
-        gameMode = "playerb";
-        aiColor = 'w'; // Player plays black
-        fen = initializeGame();
-        initializeUI(fen)
-        updateURL();
+    $('#modal-play-black').on('click', function () {
+        pendingAiGameMode = 'playerb';
+        showDifficultyModal();
     });
 
-    $("#start2PlayerBtn").on("click", function () {
-        gameMode = "2player";
-        aiColor = null;
-        fen = initializeGame();
-        initializeUI(fen)
-        updateURL();
+    $('#modal-play-two').on('click', function () {
+        pendingAiGameMode = null;
+        startTwoPlayerGame();
+    });
+
+    $('#modal-diff-back').on('click', function () {
+        pendingAiGameMode = null;
+        showStartModeModal();
+    });
+
+    $('[data-pick-difficulty]').on('click', function () {
+        var d = parseInt($(this).attr('data-pick-difficulty'), 10);
+        var mode = pendingAiGameMode;
+        pendingAiGameMode = null;
+        if (mode === 'playerw' || mode === 'playerb') {
+            startAiGameWithDifficulty(mode, d);
+        }
+    });
+
+    $('#playAgainBtn').on('click', function () {
+        resetToNewSession();
+    });
+
+    $('#brand-link').on('click', function (e) {
+        if (e.button !== 0) return;
+        if (e.ctrlKey || e.metaKey) return;
+        e.preventDefault();
+        resetToNewSession();
     });
 
     $('#difficulty-select').on('change', function () {
-        aiDifficulty = parseInt($(this).val());
+        aiDifficulty = parseInt($(this).val(), 10);
         updateURL();
     });
 
     loadGameFromURL();
-
-
 });
