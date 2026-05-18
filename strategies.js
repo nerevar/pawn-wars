@@ -316,7 +316,7 @@ var STRATEGIES = {
     },
     medium: {
         name: 'Medium (baseline)',
-        depth: 4,
+        depth: 5,
         evaluate: evaluateBoardMedium,
     },
     mediumPlusMajority: {
@@ -351,8 +351,8 @@ var STRATEGIES = {
 function difficultyToStrategy(level) {
     if (level === 0) return STRATEGIES.random;
     if (level === 1) return { ...STRATEGIES.medium, depth: 3 };
-    if (level === 2) return STRATEGIES.medium;
-    if (level === 3) return { ...STRATEGIES.medium, depth: 5 };
+    if (level === 2) return { ...STRATEGIES.medium, depth: 4 };
+    if (level === 3) return STRATEGIES.medium;
     return STRATEGIES.medium;
 }
 

@@ -30,6 +30,13 @@ var POSITION_TESTS = [
         strategy: 'medium',
         goodMoves: ['f1=Q'],
     },
+    {
+        name: 'двигает чёрную пешку навстречу, позволяя белой бежать к финишу',
+        moves: '1. d4 h6 2. f3 f6 3. g3 e5 4. e3 f5 5. c3 g6 6. dxe5 b5 7. b3',
+        turn: 'b',
+        strategy: 'medium',
+        badMoves: ['d6'],
+    },
 ];
 
 if (typeof module !== 'undefined') {
