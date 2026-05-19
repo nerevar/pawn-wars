@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(ls /Users/nerevar/work/projects/pawn-wars/*.json /Users/nerevar/work/projects/pawn-wars/package.json)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(ls:*)"
     ]
   }
 }

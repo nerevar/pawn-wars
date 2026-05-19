@@ -195,6 +195,109 @@ function evaluateMajority(color) {
     return totalScore;
 }
 
+// --- Decomposed baseline factors (individual components of evaluateBoardMedium) ---
+// Each returns raw value per color; multiply by original weight to reconstruct baseline.
+// Original formula: adv*2 + freePath*0.7 + adjThreat*(-0.8) + center*0.2 + nextMove*2
+
+function evaluateMediumAdvancement(color) {
+    var score = 0;
+    var board = game.board();
+    for (var col = 0; col < 8; col++) {
+        for (var row = 0; row < 8; row++) {
+            var piece = board[row][col];
+            if (piece && piece.type === 'p' && piece.color === color) {
+                var promotionDistance = piece.color === 'b' ? 7 - row : row;
+                score += (8 - promotionDistance);
+            }
+        }
+    }
+    return score;
+}
+
+function evaluateMediumFreePath(color) {
+    var score = 0;
+    var board = game.board();
+    for (var col = 0; col < 8; col++) {
+        for (var row = 0; row < 8; row++) {
+            var piece = board[row][col];
+            if (piece && piece.type === 'p' && piece.color === color) {
+                var isPathBlocked = false;
+                if (piece.color === 'b') {
+                    for (var r = row + 1; r < 8; r++) {
+                        if (board[r][col]) { isPathBlocked = true; break; }
+                    }
+                } else {
+                    for (var r = row - 1; r >= 0; r--) {
+                        if (board[r][col]) { isPathBlocked = true; break; }
+                    }
+                }
+                if (!isPathBlocked) score += 1;
+            }
+        }
+    }
+    return score;
+}
+
+function evaluateMediumAdjacentThreat(color) {
+    var count = 0;
+    var board = game.board();
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    for (var col = 0; col < 8; col++) {
+        for (var row = 0; row < 8; row++) {
+            var piece = board[row][col];
+            if (piece && piece.type === 'p' && piece.color === color) {
+                if (col > 0 && board[row][col - 1] && board[row][col - 1].color === enemyColor) count++;
+                if (col < 7 && board[row][col + 1] && board[row][col + 1].color === enemyColor) count++;
+            }
+        }
+    }
+    return count;
+}
+
+function evaluateMediumCenterColumn(color) {
+    var count = 0;
+    var board = game.board();
+    for (var col = 0; col < 8; col++) {
+        for (var row = 0; row < 8; row++) {
+            var piece = board[row][col];
+            if (piece && piece.type === 'p' && piece.color === color) {
+                if (col > 0 && col < 7) count++;
+            }
+        }
+    }
+    return count;
+}
+
+function evaluateMediumNextMoveSafety(color) {
+    var count = 0;
+    var board = game.board();
+    for (var col = 0; col < 8; col++) {
+        for (var row = 0; row < 8; row++) {
+            var piece = board[row][col];
+            if (piece && piece.type === 'p' && piece.color === color) {
+                if (piece.color === 'b') {
+                    if (row + 1 < 8 && !board[row + 1][col]) {
+                        var willBeFree = 0;
+                        if (col > 0 && row + 2 < 8 && board[row + 2][col - 1] && board[row + 2][col - 1].color === 'w') {
+                        } else if (col < 7 && row + 2 < 8 && board[row + 2][col + 1] && board[row + 2][col + 1].color === 'w') {
+                        } else { willBeFree = 1; }
+                        count += willBeFree;
+                    }
+                } else {
+                    if (row - 1 >= 0 && !board[row - 1][col]) {
+                        var willBeFree = 0;
+                        if (col > 0 && row - 2 >= 0 && board[row - 2][col - 1] && board[row - 2][col - 1].color === 'b') {
+                        } else if (col < 7 && row - 2 >= 0 && board[row - 2][col + 1] && board[row - 2][col + 1].color === 'b') {
+                        } else { willBeFree = 1; }
+                        count += willBeFree;
+                    }
+                }
+            }
+        }
+    }
+    return count;
+}
+
 // --- Baseline evaluation (the best-performing algorithm) ---
 
 function evaluateBoardMedium(path) {
@@ -306,6 +409,158 @@ function evaluateBoardMedium(path) {
     return score;
 }
 
+// --- Best V1 factor functions (found by CMA-ES, 2026-05-19) ---
+// These must be in strategies.js (not factors.js) because the browser loads strategies.js
+
+function evaluateBestV1PassedPawns(color) {
+    var score = 0;
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    var myPawns = getPawns(color);
+    var enemyPawns = getPawns(enemyColor);
+    var enemyByCol = {};
+    enemyPawns.forEach(function(ep) {
+        if (!enemyByCol[ep.col]) enemyByCol[ep.col] = [];
+        enemyByCol[ep.col].push(ep.row);
+    });
+    myPawns.forEach(function(pawn) {
+        var isPassed = true;
+        for (var dc = -1; dc <= 1; dc++) {
+            var checkCol = pawn.col + dc;
+            if (checkCol < 0 || checkCol > 7) continue;
+            var enemies = enemyByCol[checkCol];
+            if (!enemies) continue;
+            for (var i = 0; i < enemies.length; i++) {
+                if (color === 'w' && enemies[i] > pawn.row) { isPassed = false; break; }
+                if (color === 'b' && enemies[i] < pawn.row) { isPassed = false; break; }
+            }
+            if (!isPassed) break;
+        }
+        if (isPassed) {
+            var distance = Math.abs(pawn.row - (color === 'w' ? 7 : 0));
+            switch (distance) {
+                case 0: score += 10000; break;
+                case 1: score += 100; break;
+                case 2: score += 30; break;
+                case 3: score += 10; break;
+                case 4: score += 4; break;
+                default: score += 1; break;
+            }
+        }
+    });
+    return score;
+}
+
+function evaluateBestV1Mobility(color) {
+    var count = 0;
+    var board = game.board();
+    var forward = color === 'w' ? -1 : 1;
+    var startBoardRow = color === 'w' ? 6 : 1;
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    getPawns(color).forEach(function(pawn) {
+        var boardRow = 7 - pawn.row;
+        var nextRow = boardRow + forward;
+        if (nextRow < 0 || nextRow > 7) return;
+        if (!board[nextRow][pawn.col]) {
+            count++;
+            var nextRow2 = nextRow + forward;
+            if (boardRow === startBoardRow && nextRow2 >= 0 && nextRow2 < 8 && !board[nextRow2][pawn.col]) count++;
+        }
+        if (pawn.col > 0 && board[nextRow][pawn.col - 1] && board[nextRow][pawn.col - 1].color === enemyColor) count++;
+        if (pawn.col < 7 && board[nextRow][pawn.col + 1] && board[nextRow][pawn.col + 1].color === enemyColor) count++;
+    });
+    return count;
+}
+
+function evaluateBestV1ThreatenedPawns(color) {
+    var count = 0;
+    var board = game.board();
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    var enemyForward = enemyColor === 'w' ? -1 : 1;
+    var attacked = {};
+    getPawns(enemyColor).forEach(function(ep) {
+        var attackRow = (7 - ep.row) + enemyForward;
+        if (attackRow < 0 || attackRow > 7) return;
+        if (ep.col > 0) attacked[attackRow + ',' + (ep.col - 1)] = true;
+        if (ep.col < 7) attacked[attackRow + ',' + (ep.col + 1)] = true;
+    });
+    getPawns(color).forEach(function(pawn) {
+        if (attacked[(7 - pawn.row) + ',' + pawn.col]) count++;
+    });
+    return count;
+}
+
+function evaluateBestV1IsolatedPawns(color) {
+    var count = 0;
+    var pawns = getPawns(color);
+    var pawnFiles = {};
+    pawns.forEach(function(p) { pawnFiles[p.col] = true; });
+    pawns.forEach(function(pawn) {
+        if (!pawnFiles[pawn.col - 1] && !pawnFiles[pawn.col + 1]) count++;
+    });
+    return count;
+}
+
+function evaluateBestV1PromotionRace(color) {
+    var board = game.board();
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    function bestDist(c) {
+        var min = 99, fwd = c === 'w' ? -1 : 1;
+        getPawns(c).forEach(function(p) {
+            var br = 7 - p.row, clear = true;
+            for (var r = br + fwd; r >= 0 && r < 8; r += fwd) { if (board[r][p.col]) { clear = false; break; } }
+            if (clear) { var d = Math.abs(p.row - (c === 'w' ? 7 : 0)); if (d < min) min = d; }
+        });
+        return min;
+    }
+    var my = bestDist(color), opp = bestDist(enemyColor);
+    if (my >= 99 && opp >= 99) return 0;
+    if (my >= 99) return -10;
+    if (opp >= 99) return 10;
+    return opp - my;
+}
+
+function evaluateBestV1OpponentBlocked(color) {
+    var count = 0;
+    var board = game.board();
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    var enemyForward = enemyColor === 'w' ? -1 : 1;
+    getPawns(enemyColor).forEach(function(op) {
+        var br = 7 - op.row, nr = br + enemyForward;
+        if (nr < 0 || nr > 7) return;
+        var bl = board[nr][op.col];
+        if (bl && bl.type === 'p' && bl.color === color) count++;
+    });
+    return count;
+}
+
+function evaluateBestV1BlockedPawns(color) {
+    var score = 0;
+    var board = game.board();
+    var forward = color === 'w' ? -1 : 1;
+    var enemyColor = color === 'w' ? 'b' : 'w';
+    getPawns(color).forEach(function(pawn) {
+        var br = 7 - pawn.row, nr = br + forward;
+        if (nr < 0 || nr > 7) return;
+        if (board[nr][pawn.col]) {
+            var hasCapture = false;
+            if (pawn.col > 0 && board[nr][pawn.col - 1] && board[nr][pawn.col - 1].color === enemyColor) hasCapture = true;
+            if (pawn.col < 7 && board[nr][pawn.col + 1] && board[nr][pawn.col + 1].color === enemyColor) hasCapture = true;
+            score -= hasCapture ? 5 : 15;
+        }
+    });
+    return score;
+}
+
+function evaluateBestV1ConnectedPawns(color) {
+    var score = 0;
+    var pawns = getPawns(color);
+    var byCol = {};
+    pawns.forEach(function(p) { if (!byCol[p.col]) byCol[p.col] = []; byCol[p.col].push(p); });
+    var cols = Object.keys(byCol).map(Number).sort(function(a, b) { return a - b; });
+    for (var i = 0; i < cols.length - 1; i++) { if (cols[i + 1] - cols[i] === 1) score += 10; }
+    return score;
+}
+
 // --- Strategy definitions ---
 
 var STRATEGIES = {
@@ -346,6 +601,43 @@ var STRATEGIES = {
             return evaluatePawnAdvancement('w') - evaluatePawnAdvancement('b');
         },
     },
+    bestV1: {
+        name: 'Best V1 (CMA-ES 2026-05-19)',
+        depth: 5,
+        // CMA-ES found weights: 83% win rate vs medium depth 5 on 500 games
+        evaluate: function(path) {
+            var terminal = checkGameEnd(isFinished(), path);
+            if (terminal !== null) return terminal;
+            var w = 'w', b = 'b';
+            return 4.568 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
+                 + 2.126 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
+                 - 2.253 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
+                 + 1.202 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
+                 + 4.800 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b))
+                 + 5.000 * (evaluateBestV1PassedPawns(w) - evaluateBestV1PassedPawns(b))
+                 + 0.059 * (evaluateBestV1BlockedPawns(w) - evaluateBestV1BlockedPawns(b))
+                 + 0.890 * (evaluateBestV1Mobility(w) - evaluateBestV1Mobility(b))
+                 + 0.128 * (evaluateBestV1ConnectedPawns(w) - evaluateBestV1ConnectedPawns(b))
+                 + 0.316 * (evaluateBestV1OpponentBlocked(w) - evaluateBestV1OpponentBlocked(b))
+                 - 1.245 * (evaluateBestV1ThreatenedPawns(w) - evaluateBestV1ThreatenedPawns(b))
+                 - 2.714 * (evaluateBestV1IsolatedPawns(w) - evaluateBestV1IsolatedPawns(b))
+                 + 1.756 * (evaluateBestV1PromotionRace(w) - evaluateBestV1PromotionRace(b));
+        },
+    },
+    mediumDecomposed: {
+        name: 'Medium Decomposed',
+        depth: 5,
+        evaluate: function(path) {
+            var terminal = checkGameEnd(isFinished(), path);
+            if (terminal !== null) return terminal;
+            var w = 'w', b = 'b';
+            return 2.0 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
+                 + 0.7 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
+                 - 0.8 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
+                 + 0.2 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
+                 + 2.0 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b));
+        },
+    },
 };
 
 function difficultyToStrategy(level) {
@@ -353,7 +645,8 @@ function difficultyToStrategy(level) {
     if (level === 1) return { ...STRATEGIES.medium, depth: 3 };
     if (level === 2) return { ...STRATEGIES.medium, depth: 4 };
     if (level === 3) return STRATEGIES.medium;
-    return STRATEGIES.medium;
+    if (level === 4) return STRATEGIES.bestV1;
+    return STRATEGIES.bestV1;
 }
 
 module.exports = {
@@ -367,4 +660,9 @@ module.exports = {
     evaluateFreePath,
     evaluateMajority,
     getMajorityRowsScore,
+    evaluateMediumAdvancement,
+    evaluateMediumFreePath,
+    evaluateMediumAdjacentThreat,
+    evaluateMediumCenterColumn,
+    evaluateMediumNextMoveSafety,
 };

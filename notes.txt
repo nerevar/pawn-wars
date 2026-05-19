@@ -76,6 +76,40 @@ http://127.0.0.1:8080/?gameMode=playerw&aiDifficulty=2&moves=1.+e4+a5+2.+f4+b5+3
 
 
 
+## Weight Search Infrastructure (search_runner.js)
+
+Автоматический подбор весов для факторов оценки. Параллельные турниры через worker_threads.
+
+```bash
+# Список доступных факторов
+node search_runner.js list-factors
+
+# Быстрый ablation одного фактора (coordinate descent)
+node search_runner.js coordinate --factors passedPawns --games 300 --depth 4 --baseline-depth 4
+
+# Оценка конкретных весов vs baseline
+node search_runner.js evaluate --weights '{"passedPawns":2.0}' --depth 4 --baseline-depth 4 --games 200
+
+# Полный поиск CMA-ES (можно на ночь)
+node search_runner.js cmaes --factors passedPawns,blockedPawns,mobility,connectedPawns,defendedPawns \
+  --depth 4 --games 200 --generations 50 --run-name fullsearch
+
+# Продолжить после прерывания
+node search_runner.js cmaes --run-name fullsearch --resume
+
+# Валидация лучших весов на depth 5 (как у baseline)
+node search_runner.js evaluate --weights '{"passedPawns":2.0}' --depth 5 --baseline-depth 5 --games 500
+
+# Посмотреть результаты поиска
+node search_runner.js results --run-name fullsearch
+```
+
+Факторы: pawnAdvancement, pawnCount, captureOpportunities, freePath, majority,
+passedPawns, blockedPawns, mobility, connectedPawns, defendedPawns
+
+Логи пишутся в search_log/ (JSONL, resume-safe).
+
+
 TODO:
 правила: идти под бой или на свободную клетку (считать число своих клеток пожд боем)
 
@@ -149,3 +183,48 @@ xkoster - стример геймдев для стима делает
     * ютуб - яндекс игры
 "купить исходники веб игры"
 Яндекс игры - телеграм группа
+
+
+
+
+
+ Проблема: decomposed baseline (5 факторов с оригинальными весами, --base none) стабильно проигрывает ~10% монолитному evaluateBoardMedium. Причина — alpha-beta pruning при разных evaluate
+  функциях исследует разные ветки, что влияет на tie-breaking. Это фундаментальное свойство alpha-beta, не баг.
+
+
+
+# добавить новый фактор к decomposed baseline
+node search_runner.js evaluate \
+    --weights '{"mediumAdvancement":2.0,"mediumFreePath":0.7,"mediumAdjacentThreat":-0.8,"mediumCenterColumn":0.2,"mediumNextMoveSafety":2.0,"passedPawns":2.0}' \
+    --base none --depth 4 --baseline-depth 4 --baseline mediumDecomposed --games 500 --workers 4
+
+# запуск bash run_overnight.sh
+  => Gen 17 best: 85.5% | ever: 90.5% | sigma: 0.4493 | time: 337.6s
+  => Mean: {"mediumAdvancement":4.601,"mediumFreePath":2.802,"mediumAdjacentThreat":-2.118,"mediumCenterColumn":0.826,"mediumNextMoveSafety":4.697,"passedPawns":4.865,"blockedPawns":0.245,"
+mobility":0.782,"connectedPawns":0.136,"defendedPawns":0,"opponentBlocked":0.201,"threatenedPawns":-1.443,"isolatedPawns":-2.502,"promotionRace":2.233}
+
+
+node search_runner.js cmaes --run-name fullsearch --resume
+Log:         /Users/nerevar/work/projects/pawn-wars/search_log/2026-05-18T21-44-03_overnight_20260519_004157.jsonl
+
+
+
+ALL_FACTORS="mediumAdvancement,mediumFreePath,mediumAdjacentThreat,mediumCenterColumn,mediumNextMoveSafety,passedPawns,blockedPawns,mobility,connectedPawns,defendedPawns,opponentBlocked,threatenedPawns,isolatedPawns,promotionRace"
+RUN_NAME="overnight_20260519_004157"
+DEPTH=4
+GAMES_ABLATION=200
+GAMES_CMAES=200
+GAMES_VALIDATE=500
+GENERATIONS=60
+
+node search_runner.js cmaes \
+    --factors "${ALL_FACTORS}" \
+    --depth ${DEPTH} \
+    --baseline-depth ${DEPTH} \
+    --baseline mediumDecomposed \
+    --base none \
+    --games ${GAMES_CMAES} \
+    --generations ${GENERATIONS} \
+    --workers ${WORKERS} \
+    --run-name "${RUN_NAME}" \
+    --resume
