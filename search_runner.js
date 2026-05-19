@@ -310,9 +310,17 @@ async function cmdCMAES(args) {
     var logPath = getLogPath(runName);
     var pool = new WorkerPool(workers);
 
+    // Initial weights: from --initial-weights JSON or factor defaults
+    var initialMean = null;
+    if (args['initial-weights']) {
+        var iw = JSON.parse(args['initial-weights']);
+        initialMean = factorList.map(function(n) { return iw[n] !== undefined ? iw[n] : FACTORS[n].default; });
+    }
+
     var cmaesOptions = {
         factorNames: factorList,
         factorRanges: factorList.map(function(n) { return FACTORS[n].range; }),
+        initialMean: initialMean,
     };
 
     // Resume logic
