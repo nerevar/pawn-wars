@@ -602,26 +602,49 @@ var STRATEGIES = {
         },
     },
     bestV1: {
-        name: 'Best V1 (CMA-ES 2026-05-19)',
+        name: 'Best V1 (CMA-ES 2026-05-18)',
         depth: 5,
         // CMA-ES found weights: 83% win rate vs medium depth 5 on 500 games
-        evaluate: function(path) {
+        evaluate: function (path) {
             var terminal = checkGameEnd(isFinished(), path);
             if (terminal !== null) return terminal;
             var w = 'w', b = 'b';
             return 4.568 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
-                 + 2.126 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
-                 - 2.253 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
-                 + 1.202 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
-                 + 4.800 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b))
-                 + 5.000 * (evaluateBestV1PassedPawns(w) - evaluateBestV1PassedPawns(b))
-                 + 0.059 * (evaluateBestV1BlockedPawns(w) - evaluateBestV1BlockedPawns(b))
-                 + 0.890 * (evaluateBestV1Mobility(w) - evaluateBestV1Mobility(b))
-                 + 0.128 * (evaluateBestV1ConnectedPawns(w) - evaluateBestV1ConnectedPawns(b))
-                 + 0.316 * (evaluateBestV1OpponentBlocked(w) - evaluateBestV1OpponentBlocked(b))
-                 - 1.245 * (evaluateBestV1ThreatenedPawns(w) - evaluateBestV1ThreatenedPawns(b))
-                 - 2.714 * (evaluateBestV1IsolatedPawns(w) - evaluateBestV1IsolatedPawns(b))
-                 + 1.756 * (evaluateBestV1PromotionRace(w) - evaluateBestV1PromotionRace(b));
+                + 2.126 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
+                - 2.253 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
+                + 1.202 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
+                + 4.800 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b))
+                + 5.000 * (evaluateBestV1PassedPawns(w) - evaluateBestV1PassedPawns(b))
+                + 0.059 * (evaluateBestV1BlockedPawns(w) - evaluateBestV1BlockedPawns(b))
+                + 0.890 * (evaluateBestV1Mobility(w) - evaluateBestV1Mobility(b))
+                + 0.128 * (evaluateBestV1ConnectedPawns(w) - evaluateBestV1ConnectedPawns(b))
+                + 0.316 * (evaluateBestV1OpponentBlocked(w) - evaluateBestV1OpponentBlocked(b))
+                - 1.245 * (evaluateBestV1ThreatenedPawns(w) - evaluateBestV1ThreatenedPawns(b))
+                - 2.714 * (evaluateBestV1IsolatedPawns(w) - evaluateBestV1IsolatedPawns(b))
+                + 1.756 * (evaluateBestV1PromotionRace(w) - evaluateBestV1PromotionRace(b));
+        },
+    },
+    bestV2: {
+        name: 'Best V2 (CMA-ES 2026-05-19)',
+        depth: 5,
+        // CMA-ES found weights: 54.4% win rate vs bestV1, depth 5 on 500 games
+        evaluate: function (path) {
+            var terminal = checkGameEnd(isFinished(), path);
+            if (terminal !== null) return terminal;
+            var w = 'w', b = 'b';
+            return 3.801 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
+                + 1.889 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
+                - 1.727 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
+                + 0.808 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
+                + 4.496 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b))
+                + 3.61 * (evaluateBestV1PassedPawns(w) - evaluateBestV1PassedPawns(b))
+                // + 0 * (evaluateBestV1BlockedPawns(w) - evaluateBestV1BlockedPawns(b))
+                + 1.028 * (evaluateBestV1Mobility(w) - evaluateBestV1Mobility(b))
+                + 0.06 * (evaluateBestV1ConnectedPawns(w) - evaluateBestV1ConnectedPawns(b))
+                + 1.505 * (evaluateBestV1OpponentBlocked(w) - evaluateBestV1OpponentBlocked(b))
+                - 1.708 * (evaluateBestV1ThreatenedPawns(w) - evaluateBestV1ThreatenedPawns(b))
+                - 2.677 * (evaluateBestV1IsolatedPawns(w) - evaluateBestV1IsolatedPawns(b))
+                + 0.051 * (evaluateBestV1PromotionRace(w) - evaluateBestV1PromotionRace(b));
         },
     },
     mediumDecomposed: {

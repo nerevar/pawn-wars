@@ -204,27 +204,58 @@ node search_runner.js evaluate \
 mobility":0.782,"connectedPawns":0.136,"defendedPawns":0,"opponentBlocked":0.201,"threatenedPawns":-1.443,"isolatedPawns":-2.502,"promotionRace":2.233}
 
 
-node search_runner.js cmaes --run-name fullsearch --resume
-Log:         /Users/nerevar/work/projects/pawn-wars/search_log/2026-05-18T21-44-03_overnight_20260519_004157.jsonl
+
+nerevar@alfa-dev ~/pawn-wars (main) $ node search_runner.js cmaes \
+      --factors mediumAdvancement,mediumFreePath,mediumAdjacentThreat,mediumCenterColumn,mediumNextMoveSafety,passedPawns,blockedPawns,mobility,connectedPawns,defendedPawns,opponentBlocked,threatenedPawns,isolatedPawns,promotionRace \
+      --initial-weights '{"mediumAdvancement":4.568,"mediumFreePath":2.126,"mediumAdjacentThreat":-2.253,"mediumCenterColumn":1.202,"mediumNextMoveSafety":4.8,"passedPawns":5,"blockedPawns":0.059,"mobility":0.89,"connectedPawns":0.128,"defendedPawns":0,"opponentBlocked":0.316,"threatenedPawns":-1.245,"isolatedPawns":-2.714,"promotionRace":1.756}' \
+      --depth 4 --baseline-depth 4 \
+      --baseline bestV1 \
+      --base none \
+      --games 300 \
+      --generations 60 \
+      --run-name bestV2-search
+
+--resume --run-name bestV2-search
 
 
+==================================================
+CMA-ES Complete
+Best ever win rate: 62.3%
+Best weights:
+  mediumAdvancement: 3.801
+  mediumFreePath: 1.889
+  mediumAdjacentThreat: -1.727
+  mediumCenterColumn: 0.808
+  mediumNextMoveSafety: 4.496
+  passedPawns: 3.610
+  blockedPawns: 0.000
+  mobility: 1.028
+  connectedPawns: 0.060
+  defendedPawns: 0.000
+  opponentBlocked: 1.505
+  threatenedPawns: -1.708
+  isolatedPawns: -2.677
+  promotionRace: 0.051
 
-ALL_FACTORS="mediumAdvancement,mediumFreePath,mediumAdjacentThreat,mediumCenterColumn,mediumNextMoveSafety,passedPawns,blockedPawns,mobility,connectedPawns,defendedPawns,opponentBlocked,threatenedPawns,isolatedPawns,promotionRace"
-RUN_NAME="overnight_20260519_004157"
-DEPTH=4
-GAMES_ABLATION=200
-GAMES_CMAES=200
-GAMES_VALIDATE=500
-GENERATIONS=60
+To validate with longer tournament:
+  node search_runner.js evaluate --weights '{"mediumAdvancement":3.801,"mediumFreePath":1.889,"mediumAdjacentThreat":-1.727,"mediumCenterColumn":0.808,"mediumNextMoveSafety":4.496,"passedPawns":3.61,"blockedPawns":0,"mobility":1.028,"connectedPawns":0.06,"defendedPawns":0,"opponentBlocked":1.505,"threatenedPawns":-1.708,"isolatedPawns":-2.677,"promotionRace":0.051}' --depth 5 --baseline-depth 5 --games 500 --baseline bestV1
+  node search_runner.js evaluate --weights '{"mediumAdvancement":3.801,"mediumFreePath":1.889,"mediumAdjacentThreat":-1.727,"mediumCenterColumn":0.808,"mediumNextMoveSafety":4.496,"passedPawns":3.61,"blockedPawns":0,"mobility":1.028,"connectedPawns":0.06,"defendedPawns":0,"opponentBlocked":1.505,"threatenedPawns":-1.708,"isolatedPawns":-2.677,"promotionRace":0.051}' --depth 5 --baseline-depth 5 --games 500 --baseline medium
 
-node search_runner.js cmaes \
-    --factors "${ALL_FACTORS}" \
-    --depth ${DEPTH} \
-    --baseline-depth ${DEPTH} \
-    --baseline mediumDecomposed \
-    --base none \
-    --games ${GAMES_CMAES} \
-    --generations ${GENERATIONS} \
-    --workers ${WORKERS} \
-    --run-name "${RUN_NAME}" \
-    --resume
+
+"gen":51,"bestFitness":0.6233333333333333,"bestWeights":{
+    "mediumAdvancement":3.801,
+    "mediumFreePath":1.889,
+    "mediumAdjacentThreat":-1.727,
+    "mediumCenterColumn":0.808,
+    "mediumNextMoveSafety":4.496,
+    "passedPawns":3.61,
+    "blockedPawns":0,
+    "mobility":1.028,
+    "connectedPawns":0.06,
+    "defendedPawns":0,
+    "opponentBlocked":1.505,
+    "threatenedPawns":-1.708,
+    "isolatedPawns":-2.677,
+    "promotionRace":0.051},
+    
+    "mean":{"mediumAdvancement":3.802,"mediumFreePath":1.893,"mediumAdjacentThreat":-1.793,"mediumCenterColumn":0.785,"mediumNextMoveSafety":4.558,"passedPawns":3.574,"blockedPawns":0.031,"mobility":0.944,"connectedPawns":0.123,"defendedPawns":0,"opponentBlocked":1.561,"threatenedPawns":-1.767,"isolatedPawns":-2.764,"promotionRace":0.135},"sigma":0.10144626068244367,"bestEverFitness":0.6233333333333333
