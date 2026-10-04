@@ -8,7 +8,7 @@ var gameMode = "playerw"; // Default game mode
 var aiColor = 'b'; // Default AI Color
 var godMode = false;
 var IS_DEBUG = false;
-var ENABLE_LOGGING = true;
+var ENABLE_LOGGING = false;
 
 var ipInfo = {};
 
@@ -212,6 +212,8 @@ function updateURL() {
     let url = new URL(window.location.href);
     url.searchParams.set('gameMode', gameMode);
     url.searchParams.set('aiDifficulty', aiDifficulty);
+    if (ENABLE_LOGGING) url.searchParams.set('searchLogging', '1');
+    else url.searchParams.delete('searchLogging');
     url.searchParams.set('moves', pgn);
     window.history.pushState({}, '', url.toString());
 }
@@ -228,6 +230,8 @@ function loadGameFromURL() {
 
     gameMode = urlParams.get('gameMode') || 'playerw';
     const currentAiDifficulty = parseInt(urlParams.get('aiDifficulty'), 10);
+    ENABLE_LOGGING = urlParams.get('searchLogging') === '1';
+    $('#search-logging').prop('checked', ENABLE_LOGGING);
 
     if (!isNaN(currentAiDifficulty) && currentAiDifficulty >= 0) {
         aiDifficulty = currentAiDifficulty;
@@ -396,6 +400,11 @@ $(document).ready(function () {
 
     $('#difficulty-select').on('change', function () {
         aiDifficulty = parseInt($(this).val(), 10);
+        updateURL();
+    });
+
+    $('#search-logging').on('change', function () {
+        ENABLE_LOGGING = $(this).is(':checked');
         updateURL();
     });
 
