@@ -16,7 +16,6 @@ function buildStrategy(config, FACTORS) {
     return {
         name: config.name || 'parametric',
         depth: config.depth || 4,
-        transpositionSafe: true,
         evaluate: function(path) {
             var terminal = checkGameEnd(isFinished(), path);
             if (terminal !== null) return terminal;

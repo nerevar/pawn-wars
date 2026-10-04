@@ -611,11 +611,6 @@ var STRATEGIES = {
     },
 };
 
-// Evaluations depend only on the position and root ply (terminal distance).
-// This explicit contract lets the search cache values without assuming that
-// arbitrary user-provided evaluate(path) callbacks are history-independent.
-Object.values(STRATEGIES).forEach(strategy => { strategy.transpositionSafe = true; });
-
 function difficultyToStrategy(level) {
     if (level === 0) return STRATEGIES.random;
     if (level === 1) return { ...STRATEGIES.medium, depth: 3 };

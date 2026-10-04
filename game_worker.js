@@ -109,7 +109,7 @@ function buildStrategyFromConfig(config) {
     if (config.strategyName && STRATEGIES[config.strategyName]) {
         var s = STRATEGIES[config.strategyName];
         if (config.depth) {
-            return { ...s, depth: config.depth };
+            return { name: s.name, depth: config.depth, evaluate: s.evaluate };
         }
         return s;
     }

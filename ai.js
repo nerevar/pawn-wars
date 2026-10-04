@@ -1,185 +1,164 @@
-// ai.js — alpha-beta search. Scores always use White's perspective.
-var debug = { log: {}, tree: {}, config: {}, stats: {} };
+// ai.js — minimax engine with alpha-beta pruning
+var debug = {
+    log: {},
+    tree: {},
+    config: {}
+};
 
-function findBestMove(strategyOrDifficulty, getAllMoves, options) {
-    const strategy = typeof strategyOrDifficulty === 'object'
-        ? strategyOrDifficulty : difficultyToStrategy(strategyOrDifficulty);
-    options = options || {};
-    const depth = options.maxDepth === undefined ? strategy.depth : options.maxDepth;
-    if (!Number.isInteger(depth) || depth < 1) throw new Error('Search depth must be a positive integer');
-    const maxNodes = options.maxNodes === undefined ? Infinity : options.maxNodes;
-    const maxTableEntries = options.maxTableEntries === undefined ? 50000 : options.maxTableEntries;
-    if (!(maxNodes >= 0) || (maxNodes !== Infinity && !Number.isInteger(maxNodes))) {
-        throw new Error('maxNodes must be a non-negative integer or Infinity');
+function findBestMove(strategyOrDifficulty, getAllMoves) {
+    var strategy;
+    if (typeof strategyOrDifficulty === 'object') {
+        strategy = strategyOrDifficulty;
+    } else {
+        strategy = difficultyToStrategy(strategyOrDifficulty);
     }
-    if (!Number.isInteger(maxTableEntries) || maxTableEntries < 0) {
-        throw new Error('maxTableEntries must be a non-negative integer');
-    }
-    const logging = typeof ENABLE_LOGGING !== 'undefined' && ENABLE_LOGGING;
-    const stats = { nodes: 0, leaves: 0, cutoffs: 0, ttHits: 0, researches: 0,
-        completedDepth: 0, aborted: false, tableEntries: 0 };
-    // A custom evaluator may inspect the move path, not just the board. Such
-    // strategies must explicitly opt in to caching. No cache survives this call.
-    const useTable = strategy.transpositionSafe === true && options.useTranspositionTable !== false;
-    const table = new Map();
-    const hints = new Map();
-    const stopped = {};
+
     debug.log = {};
     debug.tree = {};
-    debug.config = { strategy, options };
-    debug.stats = stats;
+    debug.config = { strategy: strategy };
 
-    function boundedSet(map, key, value) {
-        if (maxTableEntries === 0) return;
-        if (!map.has(key) && map.size >= maxTableEntries) map.delete(map.keys().next().value);
-        map.set(key, value);
+    return minimax(
+        strategy.depth,
+        game.turn() == 'w',
+        strategy,
+        -Infinity,
+        Infinity,
+        { path: [], branchId: 'root' },
+        getAllMoves,
+    );
+}
+
+function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
+    let evaluation = {};
+    let nodeId = '';
+    if (ENABLE_LOGGING) {
+        nodeId = `${ctx.branchId}-${depth}-${isMaximizing ? 'max' : 'min'}`;
+        evaluation = {
+            nodeId,
+            depth: strategy.depth - depth,
+            movePath: [...ctx.path],
+            alpha,
+            beta,
+            components: {},
+            children: []
+        };
+        debug.log[nodeId] = evaluation;
     }
 
-    function visit() {
-        if (stats.nodes >= maxNodes) throw stopped;
-        stats.nodes++;
+    if (depth === 0 || isFinished()) {
+        const score = strategy.evaluate(ctx.path);
+
+        if (ENABLE_LOGGING) {
+            evaluation.score = score;
+            evaluation.isLeaf = true;
+        }
+        return { score, evaluation };
     }
 
-    function orderedMoves(preferred) {
-        const moves = getMoves({ verbose: true });
-        const index = moves.findIndex(move => move.san === preferred);
-        if (index > 0) moves.unshift(moves.splice(index, 1)[0]);
-        return moves;
+    const possibleMoves = getMoves({ verbose: true });
+    let movesScores = [];
+    let bestScore = isMaximizing ? -Infinity : Infinity;
+
+    for (let i = 0; i < possibleMoves.length; i++) {
+        const move = possibleMoves[i];
+
+        const childCtx = {
+            path: [...ctx.path, move.san],
+        };
+
+        if (ENABLE_LOGGING) {
+            childCtx.branchId = `${nodeId}-${i}`;
+            getTreePath(ctx.path)[move.san] = {
+                score: 0,
+                turn: game.turn() + ' ' + (isMaximizing ? '↑' : '↓'),
+            };
+        }
+
+        game.move(move.san);
+        let data = minimax(depth - 1, !isMaximizing, strategy, alpha, beta, childCtx);
+        // A cutoff can report bestScore as a bound, not an exact tie.
+        // Verify root ties before admitting them to random move selection.
+        if (ctx.path.length === 0 && getAllMoves !== true && data.score === bestScore) {
+            data = minimax(depth - 1, !isMaximizing, strategy, -Infinity, Infinity, childCtx);
+        }
+        const score = data.score;
+
+        if (ENABLE_LOGGING) {
+            const current_node = getTreePath(ctx.path)[move.san];
+            current_node.score = score;
+            current_node.zcomponents = data.evaluation.components;
+            current_node.zdrawn = drawBoard(move.from);
+
+            evaluation.children.push({
+                move: move.san,
+                score,
+                alpha,
+                beta,
+                pruned: beta <= alpha,
+                components: data.evaluation.components
+            });
+        }
+
+        game.undo();
+
+        if (getAllMoves === true) {
+            movesScores.push({ move: move, score, evaluation, path: childCtx.path });
+            continue;
+        }
+
+        if (isMaximizing ? score >= bestScore : score <= bestScore) {
+            movesScores.push({ move: move, score, evaluation, path: childCtx.path });
+            bestScore = score;
+            isMaximizing ? alpha = Math.max(alpha, score) : beta = Math.min(beta, score);
+        }
+
+        if (beta <= alpha) break;
     }
 
-    function search(remaining, alpha, beta, path) {
-        visit();
-        const node = logging ? { depth: path.length, movePath: path.slice(), alpha, beta,
-            components: {}, children: [] } : null;
-        if (node) debug.log[path.join(' ')] = node;
-        if (remaining === 0 || isFinished()) {
-            stats.leaves++;
-            const score = strategy.evaluate(path);
-            if (node) Object.assign(node, { score, isLeaf: true });
-            return score;
+    if (getAllMoves === true) return movesScores;
+
+    return getBestRandomMove(movesScores, isMaximizing ? 'max' : 'min');
+}
+
+function getBestRandomMove(movesScores, mode) {
+    if (movesScores.length === 0) return null;
+
+    let bestScore = mode === 'max' ? -Infinity : Infinity;
+    let minPathLength = Infinity;
+    let candidates = [];
+
+    for (let i = 0; i < movesScores.length; i++) {
+        const move = movesScores[i];
+        const isBetterScore = mode === 'max'
+            ? move.score > bestScore
+            : move.score < bestScore;
+
+        if (isBetterScore) {
+            bestScore = move.score;
+            minPathLength = Infinity;
+            candidates.length = 0;
         }
 
-        // Include turn and en passant. Clocks do not affect Pawn Wars rules.
-        // Include BOTH exact remaining depth and root ply: terminal scores use
-        // path.length, and reaching a board via a double move can change it.
-        const position = useTable ? game.fen().split(' ').slice(0, 4).join(' ') : null;
-        const key = position + '|' + remaining + '|' + path.length;
-        const cached = useTable ? table.get(key) : null;
-        if (cached && (cached.type === 'EXACT' ||
-            (cached.type === 'LOWER' && cached.score >= beta) ||
-            (cached.type === 'UPPER' && cached.score <= alpha))) {
-            stats.ttHits++;
-            if (node) Object.assign(node, { score: cached.score, cache: cached.type });
-            return cached.score;
-        }
-
-        const alphaOriginal = alpha, betaOriginal = beta;
-        const maximizing = game.turn() === 'w';
-        let best = maximizing ? -Infinity : Infinity;
-        let bestMove;
-        for (const move of orderedMoves(useTable ? hints.get(position) : null)) {
-            path.push(move.san);
-            game.move(move.san);
-            let score;
-            try {
-                score = search(remaining - 1, alpha, beta, path);
-                if (node) {
-                    const branch = getTreePath(path.slice(0, -1));
-                    branch[move.san] = { ...branch[move.san], score, zdrawn: drawBoard(move.from) };
-                }
-            } finally {
-                game.undo();
-                path.pop();
-            }
-            if (bestMove === undefined || (maximizing ? score > best : score < best)) {
-                best = score;
-                bestMove = move.san;
-            }
-            if (maximizing) alpha = Math.max(alpha, best);
-            else beta = Math.min(beta, best);
-            if (node) node.children.push({ move: move.san, score, pruned: alpha >= beta });
-            if (alpha >= beta) { stats.cutoffs++; break; }
-        }
-        if (useTable) {
-            const type = best <= alphaOriginal ? 'UPPER' : best >= betaOriginal ? 'LOWER' : 'EXACT';
-            boundedSet(table, key, { score: best, type });
-            boundedSet(hints, position, bestMove);
-        }
-        if (node) node.score = best;
-        return best;
-    }
-
-    function rootSearch(currentDepth, preferred) {
-        const maximizing = game.turn() === 'w';
-        let best = maximizing ? -Infinity : Infinity;
-        const candidates = [], all = [];
-        for (const move of orderedMoves(preferred)) {
-            game.move(move.san);
-            let score;
-            try {
-                score = search(currentDepth - 1,
-                    !getAllMoves && maximizing ? best : -Infinity,
-                    !getAllMoves && !maximizing ? best : Infinity, [move.san]);
-                // An equal fail-low/fail-high bound is NOT an exact tie. Only a
-                // full-window re-search may admit it to the random candidate set.
-                if (!getAllMoves && candidates.length && score === best) {
-                    stats.researches++;
-                    score = search(currentDepth - 1, -Infinity, Infinity, [move.san]);
-                }
-                if (logging) {
-                    debug.tree[move.san] = { ...debug.tree[move.san], score,
-                        zdrawn: drawBoard(move.from) };
-                }
-            } finally { game.undo(); }
-            const entry = { move, score, evaluation: {}, path: [move.san] };
-            all.push(entry);
-            if (!candidates.length || (maximizing ? score > best : score < best)) {
-                best = score;
+        if (move.score === bestScore) {
+            if (move.path.length < minPathLength) {
+                minPathLength = move.path.length;
                 candidates.length = 0;
             }
-            if (score === best) candidates.push(entry);
+            if (move.path.length === minPathLength) {
+                candidates.push(move);
+            }
         }
-        return { candidates, all };
     }
 
-    if (isFinished()) return getAllMoves ? [] : null;
-    const legalMoves = getMoves({ verbose: true });
-    if (!legalMoves.length) return getAllMoves ? [] : null;
-    let completed = null, preferred;
-    const firstDepth = options.iterativeDeepening === false ? depth : 1;
-    for (let currentDepth = firstDepth; currentDepth <= depth; currentDepth++) {
-        if (logging) { debug.log = {}; debug.tree = {}; }
-        try {
-            const iteration = rootSearch(currentDepth, preferred);
-            completed = iteration;
-            preferred = iteration.candidates[0].move.san;
-            stats.completedDepth = currentDepth;
-        } catch (error) {
-            if (error !== stopped) throw error;
-            stats.aborted = true;
-            break;
-        }
-    }
-    stats.tableEntries = table.size;
-    // Never mix scores from an incomplete iteration into hints or move choice.
-    // If even depth 1 was interrupted, a legal fallback has no claimed score.
-    if (!completed) {
-        if (getAllMoves) return [];
-        return { move: legalMoves[0], score: null, evaluation: {}, path: [legalMoves[0].san], stats };
-    }
-    if (getAllMoves) return completed.all.map(entry => ({ ...entry, stats }));
-    const random = options.random || Math.random;
-    const chosen = completed.candidates[Math.floor(random() * completed.candidates.length)];
-    return { ...chosen, stats };
+    return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 function getTreePath(path) {
-    let node = debug.tree;
-    for (const move of path) {
-        if (!node[move]) node[move] = {};
-        node = node[move];
+    let current_node = debug.tree;
+    for (const item of path) {
+        current_node = current_node[item];
     }
-    return node;
+    return current_node;
 }
 
 function makeAiMove(aiDifficulty) {
