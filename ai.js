@@ -48,6 +48,8 @@ function findBestMove(strategyOrDifficulty, getAllMoves, options) {
     return result;
 }
 
+findBestMove.supportedOptions = ['useTranspositionTable', 'maxTableEntries'];
+
 function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
     const search = ctx.search;
     search.nodes++;
@@ -76,7 +78,11 @@ function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
         (cached.type === 'LOWER' && cached.score >= beta) ||
         (cached.type === 'UPPER' && cached.score <= alpha))) {
         search.ttHits++;
-        return { score: cached.score, evaluation: {} };
+        if (ENABLE_LOGGING) {
+            evaluation.score = cached.score;
+            evaluation.cache = cached.type;
+        }
+        return { score: cached.score, evaluation };
     }
 
     if (depth === 0 || isFinished()) {
