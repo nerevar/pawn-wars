@@ -1,29 +1,32 @@
 # pawn-wars
-Chess pawn wars / Пешечные бои
+Пешечные бои
 
-https://nerevar.github.io/pawn-wars/
+[Играть в браузере](https://nerevar.github.io/pawn-wars/)
 
-## AI move selection
+## Выбор хода компьютером
 
-An alpha-beta cutoff can return the current best score as a bound even when a
-move is worse. Before randomly choosing between apparently tied root moves,
-the search rechecks an equal score with a full window. Genuine ties still allow
-random choice. The existing minimax, difficulty depths and logging are retained;
-level 4 remains `bestV1` at depth 5.
+При alpha-beta-отсечении поиск иногда возвращает границу оценки вместо точного
+значения. Из-за этого худший ход мог попасть в случайный выбор среди лучших.
+Теперь равные оценки ходов в корне перепроверяются с полным окном поиска.
+Случайный выбор между действительно равноценными ходами сохраняется.
+Алгоритм minimax, глубины сложности и журналирование остаются прежними;
+уровень 4 использует `bestV1` на глубине 5.
 
-The zero-balance factors `mediumAdjacentThreat` and `opponentBlocked` are removed
-from evaluation and tuning. Historical JSON weight files still load: these two
-names are ignored; other unknown factor names remain errors.
+Факторы `mediumAdjacentThreat` и `opponentBlocked`, чья разность оценок белых
+и чёрных всегда равна нулю, удалены из оценки и подбора весов. Старые JSON-файлы
+весов совместимы: эти два имени игнорируются, остальные неизвестные имена
+по-прежнему вызывают ошибку.
 
-## Tests
+## Проверка
 
 ```sh
 node --test test/search.test.js
 ```
 
-The tests use synthetic positions to check exhaustive minimax, false and genuine
-ties, both colours, en passant, promotion, move ordering and browser integration.
+Синтетические позиции проверяют результат полного перебора minimax, ложные
+и настоящие равенства, оба цвета, взятие на проходе, превращение пешки,
+порядок перебора ходов и работу браузерного интерфейса.
 
-The existing `node test/test_runner.js --runs 10` still has one known failing
-`medium` position (choosing `d6` after `1. d4 h6 2. f3 f6 3. g3 e5 4. e3 f5
-5. c3 g6 6. dxe5 b5 7. b3`). This also fails on the unchanged base version.
+В прежнем наборе `node test/test_runner.js --runs 10` остаётся известный
+провал стратегии `medium`: ход `d6` после `1. d4 h6 2. f3 f6 3. g3 e5
+4. e3 f5 5. c3 g6 6. dxe5 b5 7. b3`. Он воспроизводится и на исходной версии.
