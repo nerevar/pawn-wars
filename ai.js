@@ -68,6 +68,7 @@ function findBestMove(strategyOrDifficulty, getAllMoves, options) {
     debug.stats = stats;
     let completed = null;
     let completedLog = null;
+    let preferredRootMove = null;
 
     try {
         if (isFinished()) return getAllMoves === true ? [] : null;
@@ -89,13 +90,16 @@ function findBestMove(strategyOrDifficulty, getAllMoves, options) {
                     strategy,
                     -Infinity,
                     Infinity,
-                    { path: [], branchId: 'root', search },
+                    { path: [], branchId: 'root', search, preferredRootMove },
                     getAllMoves,
                 );
                 // A clock is cooperative: discard an iteration if the deadline
                 // was noticed only after it completed, retaining the prior one.
                 checkSearchLimits(search, true);
                 completed = result;
+                if (getAllMoves !== true && result && result.move) {
+                    preferredRootMove = result.move.san;
+                }
                 stats.completedDepth = depth;
                 stats.iterations.push({ depth, elapsedMs: Math.max(0, now() - iterationStartedAt),
                     nodes: stats.nodes - nodesBefore });
@@ -171,6 +175,10 @@ function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
     }
 
     const possibleMoves = getMoves({ verbose: true });
+    if (ctx.path.length === 0 && getAllMoves !== true && ctx.preferredRootMove) {
+        const index = possibleMoves.findIndex(move => move.san === ctx.preferredRootMove);
+        if (index > 0) possibleMoves.unshift(possibleMoves.splice(index, 1)[0]);
+    }
     let movesScores = [];
     let bestScore = isMaximizing ? -Infinity : Infinity;
     const alphaOriginal = alpha;

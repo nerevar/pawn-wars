@@ -39,26 +39,30 @@ test('minimum depth completes for both colours even with expired time and node b
     }
 });
 
-test('a fast clock completes depth eight and all root scores carry serializable stats', () => {
-    load(RACE);
-    const before = snapshot();
-    const adaptive = findBestMove(strategy(), false, { now: () => 0 });
-    const fixed = findBestMove({ ...STRATEGIES.bestV1, depth: 8 }, false, {
-        minDepth: 8, maxDepth: 8, now: () => 0,
-    });
-    close(adaptive.score, fixed.score);
-    assert.equal(adaptive.stats.completedDepth, 8);
-    assert.equal(adaptive.stats.aborted, false);
-    assert.deepEqual(adaptive.stats.iterations.map(row => row.depth), [6, 7, 8]);
-    assert.equal(JSON.parse(JSON.stringify(adaptive.stats)).tableEntries, adaptive.stats.tableEntries);
+test('root preference preserves the fixed depth-eight move and score for both colours', () => {
+    for (const fen of [RACE, RACE_BLACK]) {
+        load(fen);
+        const before = snapshot();
+        const adaptive = withRandom(0, () => findBestMove(strategy(), false, { now: () => 0 }));
+        const fixed = withRandom(0, () => findBestMove({ ...STRATEGIES.bestV1, depth: 8 }, false, {
+            minDepth: 8, maxDepth: 8, now: () => 0,
+        }));
+        assert.equal(adaptive.move.san, fixed.move.san);
+        close(adaptive.score, fixed.score);
+        assert.equal(adaptive.stats.completedDepth, 8);
+        assert.equal(adaptive.stats.aborted, false);
+        assert.deepEqual(adaptive.stats.iterations.map(row => row.depth), [6, 7, 8]);
+        assert.equal(JSON.parse(JSON.stringify(adaptive.stats)).tableEntries, adaptive.stats.tableEntries);
+        assert.deepEqual(snapshot(), before);
+    }
 
+    load(RACE);
     const rows = findBestMove(strategy(), true, { now: () => 0 });
     assert.ok(rows.length);
     for (const row of rows) {
         assert.equal(row.stats, rows[0].stats);
         assert.equal(row.stats.completedDepth, 8);
     }
-    assert.deepEqual(snapshot(), before);
 });
 
 test('a late depth-seven iteration is discarded and restores the depth-six log/tree', () => {
