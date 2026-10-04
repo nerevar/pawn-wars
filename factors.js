@@ -164,25 +164,6 @@ function evaluateDefendedPawns(color) {
 // Factors ported from old_factors.js (useful ones, rewritten)
 // ============================================================
 
-// Bonus for each opponent pawn blocked by OUR pawn directly in front
-function evaluateOpponentBlocked(color) {
-    var count = 0;
-    var board = game.board();
-    var enemyColor = color === 'w' ? 'b' : 'w';
-    var enemyForward = enemyColor === 'w' ? -1 : 1; // enemy's forward direction in board[]
-
-    getPawns(enemyColor).forEach(function(oppPawn) {
-        var boardRow = 7 - oppPawn.row;
-        var oppNextRow = boardRow + enemyForward;
-        if (oppNextRow < 0 || oppNextRow > 7) return;
-        var blocker = board[oppNextRow][oppPawn.col];
-        if (blocker && blocker.type === 'p' && blocker.color === color) {
-            count++;
-        }
-    });
-    return count;
-}
-
 // Count of own pawns that are attacked (can be captured) by enemy pawns.
 // Returns positive count; use negative weight to make it a penalty.
 function evaluateThreatenedPawns(color) {
@@ -284,13 +265,6 @@ var FACTORS = {
         default: 0.7,
         level: 'A',
     },
-    mediumAdjacentThreat: {
-        name: 'Medium: Adjacent Threat',
-        fn: function(color) { return evaluateMediumAdjacentThreat(color); },
-        range: [-3, 0],
-        default: -0.8,
-        level: 'A',
-    },
     mediumCenterColumn: {
         name: 'Medium: Center Column',
         fn: function(color) { return evaluateMediumCenterColumn(color); },
@@ -381,13 +355,6 @@ var FACTORS = {
     },
 
     // --- Ported from old_factors.js ---
-    opponentBlocked: {
-        name: 'Opponent Pawns Blocked',
-        fn: evaluateOpponentBlocked,
-        range: [0, 3],
-        default: 0.5,
-        level: 'B',
-    },
     threatenedPawns: {
         name: 'Threatened Pawns',
         fn: evaluateThreatenedPawns,
@@ -418,7 +385,6 @@ module.exports = {
     evaluateMobility,
     evaluateConnectedPawns,
     evaluateDefendedPawns,
-    evaluateOpponentBlocked,
     evaluateThreatenedPawns,
     evaluateIsolatedPawns,
     evaluatePromotionRace,

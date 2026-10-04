@@ -197,7 +197,8 @@ function evaluateMajority(color) {
 
 // --- Decomposed baseline factors (individual components of evaluateBoardMedium) ---
 // Each returns raw value per color; multiply by original weight to reconstruct baseline.
-// Original formula: adv*2 + freePath*0.7 + adjThreat*(-0.8) + center*0.2 + nextMove*2
+// Formula: adv*2 + freePath*0.7 + center*0.2 + nextMove*2.
+// Adjacent-threat balance was identically zero and has been removed.
 
 function evaluateMediumAdvancement(color) {
     var score = 0;
@@ -236,22 +237,6 @@ function evaluateMediumFreePath(color) {
         }
     }
     return score;
-}
-
-function evaluateMediumAdjacentThreat(color) {
-    var count = 0;
-    var board = game.board();
-    var enemyColor = color === 'w' ? 'b' : 'w';
-    for (var col = 0; col < 8; col++) {
-        for (var row = 0; row < 8; row++) {
-            var piece = board[row][col];
-            if (piece && piece.type === 'p' && piece.color === color) {
-                if (col > 0 && board[row][col - 1] && board[row][col - 1].color === enemyColor) count++;
-                if (col < 7 && board[row][col + 1] && board[row][col + 1].color === enemyColor) count++;
-            }
-        }
-    }
-    return count;
 }
 
 function evaluateMediumCenterColumn(color) {
@@ -373,27 +358,9 @@ function evaluateBoardMedium(path) {
                     }
                 }
 
-                let adjacentThreatPenalty = 0;
-                if (piece.color === 'b') {
-                    if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'w') {
-                        adjacentThreatPenalty -= 0.8;
-                    }
-                    if (col < 7 && board[row][col + 1] && board[row][col + 1].color === 'w') {
-                        adjacentThreatPenalty -= 0.8;
-                    }
-                } else {
-                    if (col > 0 && board[row][col - 1] && board[row][col - 1].color === 'b') {
-                        adjacentThreatPenalty -= 0.8;
-                    }
-                    if (col < 7 && board[row][col + 1] && board[row][col + 1].color === 'b') {
-                        adjacentThreatPenalty -= 0.8;
-                    }
-                }
-
                 let pieceScore =
                     (8 - promotionDistance) * 2 +
                     freePathBonus +
-                    adjacentThreatPenalty +
                     centerColumnBonus +
                     nextMoveFree * 2;
 
@@ -519,20 +486,6 @@ function evaluateBestV1PromotionRace(color) {
     return opp - my;
 }
 
-function evaluateBestV1OpponentBlocked(color) {
-    var count = 0;
-    var board = game.board();
-    var enemyColor = color === 'w' ? 'b' : 'w';
-    var enemyForward = enemyColor === 'w' ? -1 : 1;
-    getPawns(enemyColor).forEach(function(op) {
-        var br = 7 - op.row, nr = br + enemyForward;
-        if (nr < 0 || nr > 7) return;
-        var bl = board[nr][op.col];
-        if (bl && bl.type === 'p' && bl.color === color) count++;
-    });
-    return count;
-}
-
 function evaluateBestV1BlockedPawns(color) {
     var score = 0;
     var board = game.board();
@@ -611,14 +564,12 @@ var STRATEGIES = {
             var w = 'w', b = 'b';
             return 4.568 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
                 + 2.126 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
-                - 2.253 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
                 + 1.202 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
                 + 4.800 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b))
                 + 5.000 * (evaluateBestV1PassedPawns(w) - evaluateBestV1PassedPawns(b))
                 + 0.059 * (evaluateBestV1BlockedPawns(w) - evaluateBestV1BlockedPawns(b))
                 + 0.890 * (evaluateBestV1Mobility(w) - evaluateBestV1Mobility(b))
                 + 0.128 * (evaluateBestV1ConnectedPawns(w) - evaluateBestV1ConnectedPawns(b))
-                + 0.316 * (evaluateBestV1OpponentBlocked(w) - evaluateBestV1OpponentBlocked(b))
                 - 1.245 * (evaluateBestV1ThreatenedPawns(w) - evaluateBestV1ThreatenedPawns(b))
                 - 2.714 * (evaluateBestV1IsolatedPawns(w) - evaluateBestV1IsolatedPawns(b))
                 + 1.756 * (evaluateBestV1PromotionRace(w) - evaluateBestV1PromotionRace(b));
@@ -634,14 +585,12 @@ var STRATEGIES = {
             var w = 'w', b = 'b';
             return 3.801 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
                 + 1.889 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
-                - 1.727 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
                 + 0.808 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
                 + 4.496 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b))
                 + 3.61 * (evaluateBestV1PassedPawns(w) - evaluateBestV1PassedPawns(b))
                 // + 0 * (evaluateBestV1BlockedPawns(w) - evaluateBestV1BlockedPawns(b))
                 + 1.028 * (evaluateBestV1Mobility(w) - evaluateBestV1Mobility(b))
                 + 0.06 * (evaluateBestV1ConnectedPawns(w) - evaluateBestV1ConnectedPawns(b))
-                + 1.505 * (evaluateBestV1OpponentBlocked(w) - evaluateBestV1OpponentBlocked(b))
                 - 1.708 * (evaluateBestV1ThreatenedPawns(w) - evaluateBestV1ThreatenedPawns(b))
                 - 2.677 * (evaluateBestV1IsolatedPawns(w) - evaluateBestV1IsolatedPawns(b))
                 + 0.051 * (evaluateBestV1PromotionRace(w) - evaluateBestV1PromotionRace(b));
@@ -656,7 +605,6 @@ var STRATEGIES = {
             var w = 'w', b = 'b';
             return 2.0 * (evaluateMediumAdvancement(w) - evaluateMediumAdvancement(b))
                  + 0.7 * (evaluateMediumFreePath(w) - evaluateMediumFreePath(b))
-                 - 0.8 * (evaluateMediumAdjacentThreat(w) - evaluateMediumAdjacentThreat(b))
                  + 0.2 * (evaluateMediumCenterColumn(w) - evaluateMediumCenterColumn(b))
                  + 2.0 * (evaluateMediumNextMoveSafety(w) - evaluateMediumNextMoveSafety(b));
         },
@@ -685,7 +633,6 @@ module.exports = {
     getMajorityRowsScore,
     evaluateMediumAdvancement,
     evaluateMediumFreePath,
-    evaluateMediumAdjacentThreat,
     evaluateMediumCenterColumn,
     evaluateMediumNextMoveSafety,
 };

@@ -75,7 +75,12 @@ function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
         }
 
         game.move(move.san);
-        const data = minimax(depth - 1, !isMaximizing, strategy, alpha, beta, childCtx);
+        let data = minimax(depth - 1, !isMaximizing, strategy, alpha, beta, childCtx);
+        // A cutoff can report bestScore as a bound, not an exact tie.
+        // Verify root ties before admitting them to random move selection.
+        if (ctx.path.length === 0 && getAllMoves !== true && data.score === bestScore) {
+            data = minimax(depth - 1, !isMaximizing, strategy, -Infinity, Infinity, childCtx);
+        }
         const score = data.score;
 
         if (ENABLE_LOGGING) {
