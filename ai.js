@@ -2,33 +2,55 @@
 var debug = {
     log: {},
     tree: {},
-    config: {}
+    config: {},
+    stats: {}
 };
 
-function findBestMove(strategyOrDifficulty, getAllMoves) {
+function findBestMove(strategyOrDifficulty, getAllMoves, options) {
     var strategy;
     if (typeof strategyOrDifficulty === 'object') {
         strategy = strategyOrDifficulty;
     } else {
         strategy = difficultyToStrategy(strategyOrDifficulty);
     }
+    options = options || {};
+    const maxTableEntries = options.maxTableEntries === undefined ? 50000 : options.maxTableEntries;
+    if (!Number.isInteger(maxTableEntries) || maxTableEntries < 0) {
+        throw new Error('maxTableEntries must be a non-negative integer');
+    }
+    // Built-in evaluators use the board plus path length only. Unknown custom
+    // evaluators may inspect the path itself, unless they explicitly opt in.
+    const isBuiltin = Object.values(STRATEGIES).some(item => item.evaluate === strategy.evaluate);
+    const search = {
+        table: new Map(),
+        useTable: (isBuiltin || strategy.transpositionSafe === true)
+            && options.useTranspositionTable !== false && maxTableEntries > 0,
+        maxTableEntries,
+        nodes: 0,
+        ttHits: 0,
+    };
 
     debug.log = {};
     debug.tree = {};
-    debug.config = { strategy: strategy };
+    debug.config = { strategy: strategy, options: options };
+    debug.stats = search;
 
-    return minimax(
+    const result = minimax(
         strategy.depth,
         game.turn() == 'w',
         strategy,
         -Infinity,
         Infinity,
-        { path: [], branchId: 'root' },
+        { path: [], branchId: 'root', search },
         getAllMoves,
     );
+    search.tableEntries = search.table.size;
+    return result;
 }
 
 function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
+    const search = ctx.search;
+    search.nodes++;
     let evaluation = {};
     let nodeId = '';
     if (ENABLE_LOGGING) {
@@ -45,6 +67,18 @@ function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
         debug.log[nodeId] = evaluation;
     }
 
+    // Clocks do not affect Pawn Wars rules. Remaining depth and root ply are
+    // part of the key because terminal values include path.length.
+    const key = search.useTable && getAllMoves !== true
+        ? game.fen().split(' ').slice(0, 4).join(' ') + '|' + depth + '|' + ctx.path.length : null;
+    const cached = key === null ? null : search.table.get(key);
+    if (cached && (cached.type === 'EXACT' ||
+        (cached.type === 'LOWER' && cached.score >= beta) ||
+        (cached.type === 'UPPER' && cached.score <= alpha))) {
+        search.ttHits++;
+        return { score: cached.score, evaluation: {} };
+    }
+
     if (depth === 0 || isFinished()) {
         const score = strategy.evaluate(ctx.path);
 
@@ -52,18 +86,22 @@ function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
             evaluation.score = score;
             evaluation.isLeaf = true;
         }
+        if (key !== null) cacheScore(search, key, score, 'EXACT');
         return { score, evaluation };
     }
 
     const possibleMoves = getMoves({ verbose: true });
     let movesScores = [];
     let bestScore = isMaximizing ? -Infinity : Infinity;
+    const alphaOriginal = alpha;
+    const betaOriginal = beta;
 
     for (let i = 0; i < possibleMoves.length; i++) {
         const move = possibleMoves[i];
 
         const childCtx = {
             path: [...ctx.path, move.san],
+            search,
         };
 
         if (ENABLE_LOGGING) {
@@ -117,7 +155,16 @@ function minimax(depth, isMaximizing, strategy, alpha, beta, ctx, getAllMoves) {
 
     if (getAllMoves === true) return movesScores;
 
+    const type = bestScore <= alphaOriginal ? 'UPPER' : bestScore >= betaOriginal ? 'LOWER' : 'EXACT';
+    if (key !== null) cacheScore(search, key, bestScore, type);
     return getBestRandomMove(movesScores, isMaximizing ? 'max' : 'min');
+}
+
+function cacheScore(search, key, score, type) {
+    if (!search.table.has(key) && search.table.size >= search.maxTableEntries) {
+        search.table.delete(search.table.keys().next().value);
+    }
+    search.table.set(key, { score, type });
 }
 
 function getBestRandomMove(movesScores, mode) {
