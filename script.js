@@ -9,6 +9,7 @@ var aiColor = 'b'; // Default AI Color
 var godMode = false;
 var IS_DEBUG = false;
 var ENABLE_LOGGING = false;
+var SUPPORTED_AI_DIFFICULTIES = [0, 1, 2, 3, 4, 5];
 
 var ipInfo = {};
 
@@ -218,6 +219,10 @@ function updateURL() {
     window.history.pushState({}, '', url.toString());
 }
 
+function normalizeAiDifficulty(level) {
+    return SUPPORTED_AI_DIFFICULTIES.includes(level) ? level : 4;
+}
+
 
 function hasMovesInURL() {
     const moves = new URLSearchParams(window.location.search).get('moves');
@@ -233,8 +238,8 @@ function loadGameFromURL() {
     ENABLE_LOGGING = urlParams.get('searchLogging') === '1';
     $('#search-logging').prop('checked', ENABLE_LOGGING);
 
-    if (!isNaN(currentAiDifficulty) && currentAiDifficulty >= 0) {
-        aiDifficulty = currentAiDifficulty;
+    if (urlParams.has('aiDifficulty')) {
+        aiDifficulty = normalizeAiDifficulty(currentAiDifficulty);
         $('#difficulty-select').val(String(aiDifficulty));
     }
     aiColor = (gameMode === 'playerw') ? 'b' : ((gameMode === 'playerb') ? 'w' : null);
@@ -328,7 +333,7 @@ function startTwoPlayerGame() {
 function startAiGameWithDifficulty(mode, difficulty) {
     gameMode = mode;
     aiColor = mode === 'playerw' ? 'b' : 'w';
-    aiDifficulty = difficulty;
+    aiDifficulty = normalizeAiDifficulty(difficulty);
     $('#difficulty-select').val(String(aiDifficulty));
     fen = initializeGame();
     initializeUI(fen);
@@ -399,7 +404,8 @@ $(document).ready(function () {
     });
 
     $('#difficulty-select').on('change', function () {
-        aiDifficulty = parseInt($(this).val(), 10);
+        aiDifficulty = normalizeAiDifficulty(parseInt($(this).val(), 10));
+        $('#difficulty-select').val(String(aiDifficulty));
         updateURL();
     });
 
