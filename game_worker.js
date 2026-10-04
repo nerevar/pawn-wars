@@ -31,7 +31,6 @@ globalThis.evaluateMajority = strategies.evaluateMajority;
 globalThis.getMajorityRowsScore = strategies.getMajorityRowsScore;
 globalThis.evaluateMediumAdvancement = strategies.evaluateMediumAdvancement;
 globalThis.evaluateMediumFreePath = strategies.evaluateMediumFreePath;
-globalThis.evaluateMediumAdjacentThreat = strategies.evaluateMediumAdjacentThreat;
 globalThis.evaluateMediumCenterColumn = strategies.evaluateMediumCenterColumn;
 globalThis.evaluateMediumNextMoveSafety = strategies.evaluateMediumNextMoveSafety;
 
@@ -45,7 +44,6 @@ globalThis.evaluateBlockedPawns = factorsMod.evaluateBlockedPawns;
 globalThis.evaluateMobility = factorsMod.evaluateMobility;
 globalThis.evaluateConnectedPawns = factorsMod.evaluateConnectedPawns;
 globalThis.evaluateDefendedPawns = factorsMod.evaluateDefendedPawns;
-globalThis.evaluateOpponentBlocked = factorsMod.evaluateOpponentBlocked;
 globalThis.evaluateThreatenedPawns = factorsMod.evaluateThreatenedPawns;
 globalThis.evaluateIsolatedPawns = factorsMod.evaluateIsolatedPawns;
 globalThis.evaluatePromotionRace = factorsMod.evaluatePromotionRace;
@@ -111,7 +109,7 @@ function buildStrategyFromConfig(config) {
     if (config.strategyName && STRATEGIES[config.strategyName]) {
         var s = STRATEGIES[config.strategyName];
         if (config.depth) {
-            return { name: s.name, depth: config.depth, evaluate: s.evaluate };
+            return { ...s, depth: config.depth };
         }
         return s;
     }

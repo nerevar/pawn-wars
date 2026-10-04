@@ -4,6 +4,9 @@
 function buildStrategy(config, FACTORS) {
     var factorEntries = [];
     for (var name in config.factors) {
+        // Older weight files contain these identically zero balances. Accept
+        // those files, but never evaluate or expose the factors for tuning.
+        if (name === 'mediumAdjacentThreat' || name === 'opponentBlocked') continue;
         if (!FACTORS[name]) {
             throw new Error('Unknown factor: ' + name + '. Available: ' + Object.keys(FACTORS).join(', '));
         }
@@ -13,6 +16,7 @@ function buildStrategy(config, FACTORS) {
     return {
         name: config.name || 'parametric',
         depth: config.depth || 4,
+        transpositionSafe: true,
         evaluate: function(path) {
             var terminal = checkGameEnd(isFinished(), path);
             if (terminal !== null) return terminal;

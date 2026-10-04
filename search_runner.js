@@ -28,7 +28,6 @@ globalThis.evaluateFreePath = strategiesMod.evaluateFreePath;
 globalThis.evaluateMajority = strategiesMod.evaluateMajority;
 globalThis.evaluateMediumAdvancement = strategiesMod.evaluateMediumAdvancement;
 globalThis.evaluateMediumFreePath = strategiesMod.evaluateMediumFreePath;
-globalThis.evaluateMediumAdjacentThreat = strategiesMod.evaluateMediumAdjacentThreat;
 globalThis.evaluateMediumCenterColumn = strategiesMod.evaluateMediumCenterColumn;
 globalThis.evaluateMediumNextMoveSafety = strategiesMod.evaluateMediumNextMoveSafety;
 globalThis.game = new Chess();

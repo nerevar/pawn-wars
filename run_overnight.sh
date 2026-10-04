@@ -5,8 +5,8 @@
 # Example: bash run_overnight.sh 31    (Ubuntu 32 cores)
 #
 # Pipeline:
-#   Phase 1: Ablation — test each of 14 extra factors individually (~40 min)
-#   Phase 2: CMA-ES — optimize all 19 factors together (~4-6 hours)
+#   Phase 1: Ablation — test each of 13 extra factors individually (~40 min)
+#   Phase 2: CMA-ES — optimize all selected factors together (~4-6 hours)
 #   Phase 3: Validate best weights vs monolithic medium on depth 5 (~10 min)
 
 set -e
@@ -46,7 +46,6 @@ EXTRA_FACTORS=(
     mobility
     connectedPawns
     defendedPawns
-    opponentBlocked
     threatenedPawns
     isolatedPawns
     promotionRace
@@ -57,7 +56,7 @@ EXTRA_FACTORS=(
     majority
 )
 
-BASELINE_WEIGHTS='{"mediumAdvancement":2.0,"mediumFreePath":0.7,"mediumAdjacentThreat":-0.8,"mediumCenterColumn":0.2,"mediumNextMoveSafety":2.0}'
+BASELINE_WEIGHTS='{"mediumAdvancement":2.0,"mediumFreePath":0.7,"mediumCenterColumn":0.2,"mediumNextMoveSafety":2.0}'
 
 # Get default weight for a factor from list-factors output
 get_default_weight() {
@@ -113,13 +112,13 @@ echo -e "${ABLATION_RESULTS}"
 echo ""
 
 # -------------------------------------------------------------------
-# Phase 2: CMA-ES — optimize all 19 factors together
+# Phase 2: CMA-ES — optimize all selected factors together
 # Start from decomposed baseline weights + zeros for extras
 # -------------------------------------------------------------------
 echo "========== PHASE 2: CMA-ES =========="
 echo ""
 
-ALL_FACTORS="mediumAdvancement,mediumFreePath,mediumAdjacentThreat,mediumCenterColumn,mediumNextMoveSafety,passedPawns,blockedPawns,mobility,connectedPawns,defendedPawns,opponentBlocked,threatenedPawns,isolatedPawns,promotionRace"
+ALL_FACTORS="mediumAdvancement,mediumFreePath,mediumCenterColumn,mediumNextMoveSafety,passedPawns,blockedPawns,mobility,connectedPawns,defendedPawns,threatenedPawns,isolatedPawns,promotionRace"
 
 node search_runner.js cmaes \
     --factors "${ALL_FACTORS}" \
