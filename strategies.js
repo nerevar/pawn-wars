@@ -611,12 +611,20 @@ var STRATEGIES = {
     },
 };
 
+STRATEGIES.superHard = {
+    name: 'Super Hard',
+    depth: 8,
+    searchOptions: { minDepth: 6, maxTimeMs: 500 },
+    evaluate: STRATEGIES.bestV1.evaluate,
+};
+
 function difficultyToStrategy(level) {
     if (level === 0) return STRATEGIES.random;
     if (level === 1) return { ...STRATEGIES.medium, depth: 3 };
     if (level === 2) return { ...STRATEGIES.medium, depth: 4 };
     if (level === 3) return STRATEGIES.medium;
     if (level === 4) return STRATEGIES.bestV1;
+    if (level === 5) return STRATEGIES.superHard;
     return STRATEGIES.bestV1;
 }
 

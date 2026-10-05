@@ -399,23 +399,29 @@
             color: #fff;
         }
 
+        /* Цвета Common → Legendary: https://dota2.fandom.com/ru/wiki/Редкость */
         .btn--easy {
-            background: linear-gradient(180deg, #8ce99a 0%, #57c269 100%);
-            color: #0d3d1a;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent), #b0c3d9;
+            color: #102333;
         }
 
         .btn--medium {
-            background: linear-gradient(180deg, #ffd166 0%, var(--accent) 100%);
-            color: #4a3200;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent), #5e98d9;
+            color: #102333;
         }
 
         .btn--hard {
-            background: linear-gradient(180deg, #ff8a9b 0%, var(--danger) 100%);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24)), #4b69ff;
             color: #fff;
         }
 
         .btn--expert {
-            background: linear-gradient(180deg, #b197fc 0%, #7950f2 100%);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24)), #8847ff;
+            color: #fff;
+        }
+
+        .btn--superhard {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24)), #d32ce6;
             color: #fff;
         }
 
@@ -509,6 +515,7 @@
             <span class="engineering-bar__label">Инженерное меню</span>
             <button type="button" class="btn" id="movesBtn">Показать оценки</button>
             <button type="button" class="btn" id="godModeBtn">Режим бога: выкл</button>
+            <label><input type="checkbox" id="search-logging"> Логирование поиска</label>
             <label for="difficulty-select">Сложность ИИ</label>
             <select id="difficulty-select">
                 <option value="0">0 Случайно</option>
@@ -516,11 +523,7 @@
                 <option value="2" selected>2 Средний</option>
                 <option value="3">3 Сложный</option>
                 <option value="4">4 Очень сложный</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
+                <option value="5">5 Супер сложный</option>
             </select>
         </div>
     </div>
@@ -556,10 +559,11 @@
             <h2 id="modal-diff-title">Выбери сложность</h2>
             <p>Чем выше — тем сильнее компьютер</p>
             <div class="modal-actions">
-                <button type="button" class="btn btn--easy" data-pick-difficulty="1">Лёгкий</button>
-                <button type="button" class="btn btn--medium" data-pick-difficulty="2">Средний</button>
-                <button type="button" class="btn btn--hard" data-pick-difficulty="3">Сложный</button>
-                <button type="button" class="btn btn--expert" data-pick-difficulty="4">Очень сложный</button>
+                <button type="button" class="btn btn--easy" data-pick-difficulty="1">1. Лёгкий</button>
+                <button type="button" class="btn btn--medium" data-pick-difficulty="2">2. Средний</button>
+                <button type="button" class="btn btn--hard" data-pick-difficulty="3">3. Сложный</button>
+                <button type="button" class="btn btn--expert" data-pick-difficulty="4">4. Очень сложный</button>
+                <button type="button" class="btn btn--superhard" data-pick-difficulty="5">5. Супер сложный</button>
             </div>
         </div>
     </div>
